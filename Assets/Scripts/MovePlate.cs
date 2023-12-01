@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class MovePlate : MonoBehaviour
@@ -13,7 +12,9 @@ public class MovePlate : MonoBehaviour
     int matrixY;
 
     //false: movement, true: attacking
-    public bool attack = false;
+    private bool attack = false;
+
+    private GameObject castlingRook = null;
 
     public void Start() {
         if (attack) {
@@ -24,28 +25,74 @@ public class MovePlate : MonoBehaviour
 
     public void OnMouseUp() {
         controller = GameObject.FindGameObjectWithTag("GameController");
+        Game gameScript = controller.GetComponent<Game>();
+        Chessman chessmanScript = reference.GetComponent<Chessman>();
 
         if(attack) {
-            GameObject cp = controller.GetComponent<Game>().GetPosition(matrixX, matrixY);
+            GameObject chessPiece;
 
-            if (cp.name == "white_king") controller.GetComponent<Game>().Winner("black");
-            if (cp.name == "black_king") controller.GetComponent<Game>().Winner("white");
+            if(gameScript.GetPosition(matrixX, matrixY)) {
+                chessPiece = gameScript.GetPosition(matrixX, matrixY);
+                if (chessPiece.name == "white_king") gameScript.Winner("black");
+                if (chessPiece.name == "black_king") gameScript.Winner("white");
+            } else {
+                if (gameScript.GetCurrentPlayer() == "white") {
+                    chessPiece = gameScript.GetPosition(matrixX, matrixY - 1);
+                } else {
+                    chessPiece = gameScript.GetPosition(matrixX, matrixY + 1);
+                }
+            }
 
-            Destroy(cp);
+            Destroy(chessPiece);
         }
 
-        controller.GetComponent<Game>().SetPositionEmpty(reference.GetComponent<Chessman>().GetXBoard(),
-                                                         reference.GetComponent<Chessman>().GetYBoard());
+        gameScript.SetPositionEmpty(chessmanScript.GetXBoard(),
+                                    chessmanScript.GetYBoard());
 
-        reference.GetComponent<Chessman>().SetXBoard(matrixX);
-        reference.GetComponent<Chessman>().SetYBoard(matrixY);
-        reference.GetComponent<Chessman>().SetCoords();
+        gameScript.SetRefToPossibleEnPassantPawn(null);
 
-        controller.GetComponent<Game>().SetPosition(reference);
+        if(Math.Abs(chessmanScript.GetYBoard() - matrixY) == 2 && (reference.name == "white_pawn" || reference.name == "black_pawn")) {
+            gameScript.SetRefToPossibleEnPassantPawn(reference);
+        }
+        
+        if(reference.name == "white_pawn" && matrixY == 7) {
+            Destroy(reference);
+            reference = gameScript.Create("white_queen", matrixX, matrixY);
 
-        controller.GetComponent<Game>().NextTurn();
+        } else if (reference.name == "black_pawn" && matrixY == 0) {
+            Destroy(reference);
+            reference = gameScript.Create("black_queen", matrixX, matrixY);
+        }
 
-        reference.GetComponent<Chessman>().DestroyMovePlates();
+        chessmanScript.SetXBoard(matrixX);
+        chessmanScript.SetYBoard(matrixY);
+        chessmanScript.SetCoords();
+        chessmanScript.SetHasMoved(true);
+
+        gameScript.SetPosition(reference);
+
+        if(castlingRook) {
+            Chessman rookChessmanScript = castlingRook.GetComponent<Chessman>();
+
+            gameScript.SetPositionEmpty(rookChessmanScript.GetXBoard(),
+                                        rookChessmanScript.GetYBoard());
+                                        
+            if(rookChessmanScript.GetXBoard() == 0) {
+                rookChessmanScript.SetXBoard(3);
+            } else {
+                rookChessmanScript.SetXBoard(5);
+            }
+
+            rookChessmanScript.SetYBoard(rookChessmanScript.GetYBoard());
+            rookChessmanScript.SetCoords();
+            rookChessmanScript.SetHasMoved(true);
+            
+            gameScript.SetPosition(castlingRook);
+        }
+
+        gameScript.NextTurn();
+
+        chessmanScript.DestroyMovePlates();
     }
 
     public void SetCoords(int x, int y) {
@@ -57,7 +104,19 @@ public class MovePlate : MonoBehaviour
         reference = obj;
     }
 
+    public void SetAttack(bool attack) {
+        this.attack = attack;
+    }
+
+    public void SetCastling(GameObject castling) {
+        this.castlingRook = castling;
+    }
+
     public GameObject GetReference() {
         return reference;
+    }
+
+    public bool GetAttack() {
+        return attack;
     }
 }

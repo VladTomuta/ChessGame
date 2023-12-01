@@ -15,6 +15,10 @@ public class Chessman : MonoBehaviour
     // Variable ot keep track of "black" player or "white" player
     private string player;
 
+    // Variable to keep track if the piece has moved or not this game
+    private bool hasMoved;
+    private bool canBeCapturedEnPassant;
+
     // References for all the sprites that the chesspiece can be
     public Sprite black_king, black_queen, black_knight, black_bishop, black_rook, black_pawn;
     public Sprite white_king, white_queen, white_knight, white_bishop, white_rook, white_pawn;
@@ -63,12 +67,28 @@ public class Chessman : MonoBehaviour
         return yBoard;
     }
 
+    public bool GetHasMoved() {
+        return hasMoved;
+    }
+
+    public bool GetCanBeCapturedEnPassent() {
+        return canBeCapturedEnPassant;
+    }
+
     public void SetXBoard(int x) {
         xBoard = x;
     }
 
     public void SetYBoard(int y) {
         yBoard = y;
+    }
+
+    public void SetHasMoved(bool hasMoved) {
+        this.hasMoved = hasMoved;
+    }
+
+    public void SetCanBeCapturedEnPassent(bool canBeCapturedEnPassant) {
+        this.canBeCapturedEnPassant = canBeCapturedEnPassant;
     }
 
     private void OnMouseUp() {
@@ -111,7 +131,7 @@ public class Chessman : MonoBehaviour
                 break;
             case "black_king":
             case "white_king":
-                SurroundMovePlate();
+                KingMovePlate();
                 break;
             case "black_rook":
             case "white_rook":
@@ -121,26 +141,26 @@ public class Chessman : MonoBehaviour
                 LineMovePlate(0, -1);  //down
                 break;
             case "black_pawn":
-                PawnMovePlate(xBoard, yBoard - 1);
+                BlackPawnMovePlate(xBoard, yBoard - 1);
                 break;
             case "white_pawn":
-                PawnMovePlate(xBoard, yBoard + 1);
+                WhitePawnMovePlate(xBoard, yBoard + 1);
                 break;
         }
     }
 
     public void LineMovePlate(int xIncrement, int yIncrement) {
-        Game sc = controller.GetComponent<Game>();
+        Game gameScript = controller.GetComponent<Game>();
         int x = xBoard + xIncrement;
         int y = yBoard + yIncrement;
 
-        while(sc.PositionOnBoard(x, y) && sc.GetPosition(x, y) == null) {
+        while(gameScript.PositionOnBoard(x, y) && gameScript.GetPosition(x, y) == null) {
             MovePlateSpawn(x, y);
             x += xIncrement;
             y += yIncrement;
         }
 
-        if (sc.PositionOnBoard(x, y) && sc.GetPosition(x, y).GetComponent<Chessman>().player != player) {
+        if (gameScript.PositionOnBoard(x, y) && gameScript.GetPosition(x, y).GetComponent<Chessman>().player != player) {
             MovePlateAttackSpawn(x, y);
         }
     }
@@ -156,7 +176,7 @@ public class Chessman : MonoBehaviour
         PointMovePlate(xBoard - 2, yBoard  - 1);
     }
 
-    public void SurroundMovePlate() {
+    public void KingMovePlate() {
         PointMovePlate(xBoard, yBoard  + 1);
         PointMovePlate(xBoard, yBoard  - 1);
         PointMovePlate(xBoard + 1, yBoard);
@@ -165,37 +185,121 @@ public class Chessman : MonoBehaviour
         PointMovePlate(xBoard + 1, yBoard  - 1);
         PointMovePlate(xBoard - 1, yBoard  + 1);
         PointMovePlate(xBoard - 1, yBoard  - 1);
+
+        Game gameScript = controller.GetComponent<Game>();
+        
+        if(gameScript.GetCurrentPlayer() == "white") {
+            GameObject leftRook = gameScript.GetPosition(0, 0);
+            GameObject rightRook = gameScript.GetPosition(7, 0);
+            if(leftRook != null) {
+                if (CheckCastling(this, leftRook.GetComponent<Chessman>())) {
+                    MovePlateCastlingSpawn(xBoard - 2, yBoard, leftRook);
+                }
+            }
+            if(rightRook != null) {
+                if (CheckCastling(this, rightRook.GetComponent<Chessman>())) {
+                    MovePlateCastlingSpawn(xBoard + 2, yBoard, rightRook);
+                }
+            }
+        } else {
+            GameObject leftRook = gameScript.GetPosition(0, 7);
+            GameObject rightRook = gameScript.GetPosition(7, 7);
+            if(leftRook != null) {
+                if (CheckCastling(this, leftRook.GetComponent<Chessman>())) {
+                    MovePlateCastlingSpawn(xBoard - 2, yBoard, leftRook);
+                }
+            }
+            if(rightRook != null) {
+                if (CheckCastling(this, rightRook.GetComponent<Chessman>())) {
+                    MovePlateCastlingSpawn(xBoard + 2, yBoard, rightRook);
+                }
+            }
+        }
     }
 
     public void PointMovePlate(int x, int y) {
-        Game sc = controller.GetComponent<Game>();
-        if (sc.PositionOnBoard(x, y)) {
-            GameObject cp = sc.GetPosition(x, y);
+        Game gameScript = controller.GetComponent<Game>();
+        if (gameScript.PositionOnBoard(x, y)) {
+            GameObject chessPiece = gameScript.GetPosition(x, y);
 
-            if (cp == null) {
+            if (chessPiece == null) {
                 MovePlateSpawn(x, y);
-            } else if (cp.GetComponent<Chessman>().player != player) {
+            } else if (chessPiece.GetComponent<Chessman>().player != player) {
                 MovePlateAttackSpawn(x, y);
             }
         }
     }
 
-    public void PawnMovePlate(int x, int y) {
-        Game sc = controller.GetComponent<Game>();
-        if (sc.PositionOnBoard(x, y)) {
-            if (sc.GetPosition(x, y) == null) 
-                MovePlateSpawn(x, y);
+    public void WhitePawnMovePlate(int x, int y) {
+        Game gameScript = controller.GetComponent<Game>();
+        GameObject refToPossibleEnPassantPawn = gameScript.GetRefToPossibleEnPassantPawn();
 
-            if (sc.PositionOnBoard(x + 1, y) &&
-                sc.GetPosition(x + 1, y) != null &&
-                sc.GetPosition(x + 1, y).GetComponent<Chessman>().player != player
+        if (gameScript.PositionOnBoard(x, y)) {
+            if (gameScript.GetPosition(x, y) == null) {
+                MovePlateSpawn(x, y);
+                if (!hasMoved) {
+                    MovePlateSpawn(x, y + 1);
+                }
+            }
+
+            if (refToPossibleEnPassantPawn) {
+                if (gameScript.GetPosition(x + 1, y - 1) == refToPossibleEnPassantPawn) {
+                    MovePlateAttackSpawn(x + 1, y);
+                }
+
+                if (gameScript.GetPosition(x - 1, y - 1) == refToPossibleEnPassantPawn) {
+                    MovePlateAttackSpawn(x - 1, y);
+                }
+            }
+
+            if (gameScript.PositionOnBoard(x + 1, y) &&
+                gameScript.GetPosition(x + 1, y) != null &&
+                gameScript.GetPosition(x + 1, y).GetComponent<Chessman>().player != player
             ) {
                 MovePlateAttackSpawn(x + 1, y);
             }
 
-            if (sc.PositionOnBoard(x - 1, y) &&
-                sc.GetPosition(x - 1, y) != null &&
-                sc.GetPosition(x - 1, y).GetComponent<Chessman>().player != player
+            if (gameScript.PositionOnBoard(x - 1, y) &&
+                gameScript.GetPosition(x - 1, y) != null &&
+                gameScript.GetPosition(x - 1, y).GetComponent<Chessman>().player != player
+            ) {
+                MovePlateAttackSpawn(x - 1, y);
+            }
+        }
+    }
+
+    public void BlackPawnMovePlate(int x, int y) {
+        Game gameScript = controller.GetComponent<Game>();
+        GameObject refToPossibleEnPassantPawn = gameScript.GetRefToPossibleEnPassantPawn();
+
+        if (gameScript.PositionOnBoard(x, y)) {
+            if (gameScript.GetPosition(x, y) == null) {
+                MovePlateSpawn(x, y);
+                if (!hasMoved) {
+                    MovePlateSpawn(x, y - 1);
+                }
+            }
+
+            if (refToPossibleEnPassantPawn) {
+                if (gameScript.GetPosition(x + 1, y + 1) == refToPossibleEnPassantPawn) {
+                    MovePlateAttackSpawn(x + 1, y);
+                }
+
+                if (gameScript.GetPosition(x - 1, y + 1) == refToPossibleEnPassantPawn) {
+                    MovePlateAttackSpawn(x - 1, y);
+                }
+            }
+
+            if (gameScript.PositionOnBoard(x + 1, y) &&
+                gameScript.GetPosition(x + 1, y) != null &&
+                gameScript.GetPosition(x + 1, y).GetComponent<Chessman>().player != player
+            ) {
+                MovePlateAttackSpawn(x + 1, y);
+            }
+
+            if (gameScript.PositionOnBoard(x - 1, y) &&
+                gameScript.GetPosition(x - 1, y) != null &&
+                gameScript.GetPosition(x - 1, y).GetComponent<Chessman>().player != player
             ) {
                 MovePlateAttackSpawn(x - 1, y);
             }
@@ -212,11 +316,11 @@ public class Chessman : MonoBehaviour
         x += -2.3f;
         y += -2.3f;
 
-        GameObject mp = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
+        GameObject MovePlate = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
 
-        MovePlate mpScript = mp.GetComponent<MovePlate>();
-        mpScript.SetReference(gameObject);
-        mpScript.SetCoords(matrixX, matrixY);
+        MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
+        movePlateScript.SetReference(gameObject);
+        movePlateScript.SetCoords(matrixX, matrixY);
     }
 
     public void MovePlateAttackSpawn(int matrixX, int matrixY) {
@@ -229,11 +333,53 @@ public class Chessman : MonoBehaviour
         x += -2.3f;
         y += -2.3f;
 
-        GameObject mp = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
+        GameObject movePlate = Instantiate(this.movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
 
-        MovePlate mpScript = mp.GetComponent<MovePlate>();
-        mpScript.attack = true;
-        mpScript.SetReference(gameObject);
-        mpScript.SetCoords(matrixX, matrixY);
+        MovePlate movePlateScript = movePlate.GetComponent<MovePlate>();
+        movePlateScript.SetAttack(true);
+        movePlateScript.SetReference(gameObject);
+        movePlateScript.SetCoords(matrixX, matrixY);
+    }
+
+    public void MovePlateCastlingSpawn(int matrixX, int matrixY, GameObject rook) {
+        float x = matrixX;
+        float y = matrixY;
+
+        x *= 0.66f;
+        y *= 0.66f;
+
+        x += -2.3f;
+        y += -2.3f;
+
+        GameObject MovePlate = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
+
+        MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
+        movePlateScript.SetCastling(rook);
+        movePlateScript.SetReference(gameObject);
+        movePlateScript.SetCoords(matrixX, matrixY);
+    }
+
+    public bool CheckCastling(Chessman king, Chessman rook) {
+        Game gameScript = controller.GetComponent<Game>();
+
+        if(king.hasMoved == true || rook.hasMoved == true) {
+            return false;
+        }
+
+        if(king.xBoard > rook.xBoard) {
+            for(int i = rook.xBoard + 1; i < king.xBoard; i++) {
+                if(gameScript.GetPosition(i, king.yBoard)) {
+                    return false;
+                }
+            }
+        } else {
+            for(int i = king.xBoard + 1; i < rook.xBoard; i++) {
+                if(gameScript.GetPosition(i, king.yBoard)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 } 

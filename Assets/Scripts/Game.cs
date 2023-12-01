@@ -9,13 +9,15 @@ public class Game : MonoBehaviour
 {
 
     //Positions and team for each chesspiece
-    public GameObject chesspiece;
+    public GameObject chessPiece;
     private GameObject[,] positions = new GameObject[8, 8];
     private GameObject[] playerBlack = new GameObject[16];
     private GameObject[] playerWhite = new GameObject[16];
 
     private string currentPlayer = "white";
     private bool gameOver = false;
+
+   private  GameObject refToPossibleEnPassantPawn = null;
 
     // Start is called before the first frame update
     void Start()
@@ -66,36 +68,45 @@ public class Game : MonoBehaviour
     }
 
     public GameObject Create(string name, int x, int y) {
-        GameObject obj = Instantiate(chesspiece, new Vector3(0, 0, -1), Quaternion.identity);
-        Chessman cm = obj.GetComponent<Chessman>();
-        cm.name = name;
-        cm.SetXBoard(x);
-        cm.SetYBoard(y);
-        cm.Activate();
+        GameObject obj = Instantiate(chessPiece, new Vector3(0, 0, -1), Quaternion.identity);
+        Chessman chessmanScript = obj.GetComponent<Chessman>();
+        chessmanScript.name = name;
+        chessmanScript.SetXBoard(x);
+        chessmanScript.SetYBoard(y);
+        chessmanScript.SetHasMoved(false);
+        chessmanScript.Activate();
         return obj;
     }
 
     public void SetPosition(GameObject obj) {
-        Chessman cm = obj.GetComponent<Chessman>();
+        Chessman chessmanScript = obj.GetComponent<Chessman>();
 
-        positions[cm.GetXBoard(), cm.GetYBoard()] = obj;
+        positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()] = obj;
     }
 
     public void SetPositionEmpty(int x, int y) {
         positions[x, y] = null;
     }
 
+    public void SetRefToPossibleEnPassantPawn(GameObject refToPossibleEnPassantPawn) {
+        this.refToPossibleEnPassantPawn = refToPossibleEnPassantPawn;
+    }
+
     public GameObject GetPosition(int x, int y) {
         return positions[x, y];
     }
 
-    public bool PositionOnBoard(int x, int y) {
-        if(x < 0 || x < 0 || x >= positions.GetLength(0) || y >= positions.GetLength(1)) return false;
-        return true;
-    }
-
     public string GetCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public GameObject GetRefToPossibleEnPassantPawn() {
+        return refToPossibleEnPassantPawn;
+    }
+
+    public bool PositionOnBoard(int x, int y) {
+        if(x < 0 || y < 0 || x >= positions.GetLength(0) || y >= positions.GetLength(1)) return false;
+        return true;
     }
 
     public bool IsGameOver() {
