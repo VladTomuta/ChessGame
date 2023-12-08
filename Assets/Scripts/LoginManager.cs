@@ -1,0 +1,61 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using TMPro;
+using Firebase;
+using Firebase.Auth;
+using Firebase.Extensions;
+
+public class LoginManager : MonoBehaviour
+{
+    public TMP_InputField emailInput;
+    public TMP_InputField passwordInput;
+    public Button loginButton;
+    public Button signUpButton;
+
+    private FirebaseAuth auth;
+
+    private void Start()
+    {
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        {
+            FirebaseApp app = FirebaseApp.DefaultInstance;
+            auth = FirebaseAuth.DefaultInstance;
+
+            if (app == null || auth == null)
+            {
+                Debug.LogError($"Failed to initialize Firebase with {task.Exception}");
+            }
+        });
+
+        loginButton.onClick.AddListener(Login);
+        signUpButton.onClick.AddListener(GoToSignUpScene);
+    }
+
+    private void Login()
+    {
+        string email = emailInput.text;
+        string password = passwordInput.text;
+
+        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCanceled || task.IsFaulted)
+            {
+                Debug.LogError($"Failed to sign in with {task.Exception}");
+                // You might want to display an error message to the user
+                return;
+            }
+
+            Debug.Log("User signed in successfully!");
+            // Call a function to switch scenes or use Unity's SceneManager.LoadScene
+            SceneManager.LoadScene("Game");
+        });
+    }
+
+    private void GoToSignUpScene()
+    {
+        // Add code here to transition to your sign-up scene
+        // For example, you can use SceneManager.LoadScene("SignUpScene");
+        SceneManager.LoadScene("SignUpScene");
+    }
+}

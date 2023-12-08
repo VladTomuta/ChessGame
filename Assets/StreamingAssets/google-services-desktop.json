@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "973666814739",
+    "project_id": "chessgame-7a764",
+    "storage_bucket": "chessgame-7a764.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973666814739:android:34dc51e3326bf950ef68e6",
+        "android_client_info": {
+          "package_name": "com.licenta.chessgame"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg_W2P0E2nH00UEGsP3sxKZa1YWoIeXNg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
