@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Firebase;
 using Firebase.Auth;
-using Firebase.Database;
 using Firebase.Extensions;
 using Firebase.Firestore;
 
@@ -18,7 +17,7 @@ public class RegistrationManager : MonoBehaviour
     public Button loginButton;
 
     private FirebaseAuth auth;
-    private FirebaseFirestore databaseFirestore;
+    private FirebaseFirestore firestoreDatabase;
 
     private async void Start()
     {
@@ -32,12 +31,16 @@ public class RegistrationManager : MonoBehaviour
         }
 
         auth = FirebaseAuth.DefaultInstance;
-        databaseFirestore = FirebaseFirestore.DefaultInstance;
+        firestoreDatabase = FirebaseFirestore.DefaultInstance;
 
-        if (auth == null || databaseFirestore == null)
+        if (auth == null || firestoreDatabase == null)
         {
             Debug.LogError("Failed to get Firebase instances");
             return;
+        }
+
+        if(PlayerPrefs.GetString("userId") != "") {
+            SceneManager.LoadScene("MainMenuScene");
         }
 
         // Enable buttons only after both authentication and Firestore are initialized
@@ -45,6 +48,8 @@ public class RegistrationManager : MonoBehaviour
         loginButton.interactable = true;
 
         Debug.Log("Firebase initialization successful");
+
+        
 
         signUpButton.onClick.AddListener(SignUp);
         loginButton.onClick.AddListener(GoToLoginScene);
@@ -84,10 +89,12 @@ public class RegistrationManager : MonoBehaviour
 
             AddDocumentToCollection(userId, username);
 
+            PlayerPrefs.SetString("userId", userId);
+            PlayerPrefs.SetString("username", username);
+            PlayerPrefs.Save();
+
             // Call a function to switch scenes or use Unity's SceneManager.LoadScene
             SceneManager.LoadScene("Game");
-
-            
         });
     }
 
@@ -101,7 +108,7 @@ public class RegistrationManager : MonoBehaviour
     private void AddDocumentToCollection(string userId, string newUsername)
     {
         // Get a reference to the collection
-        CollectionReference userCollectionRef = databaseFirestore.Collection("Users");
+        CollectionReference userCollectionRef = firestoreDatabase.Collection("Users");
 
         Debug.Log("Collection ref aquired!");
 

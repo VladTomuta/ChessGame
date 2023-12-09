@@ -12,6 +12,7 @@ public class LoginManager : MonoBehaviour
     public TMP_InputField passwordInput;
     public Button loginButton;
     public Button signUpButton;
+    public DatabaseManager databaseManager;
 
     private FirebaseAuth auth;
 
@@ -46,10 +47,31 @@ public class LoginManager : MonoBehaviour
                 return;
             }
 
-            Debug.Log("User signed in successfully!");
-            // Call a function to switch scenes or use Unity's SceneManager.LoadScene
-            SceneManager.LoadScene("Game");
+            FirebaseUser user = FirebaseAuth.DefaultInstance.CurrentUser;
+
+            if (user != null) 
+            {
+                Debug.Log("User signed in successfully!");
+            
+                // Access user properties
+                string userId = user.UserId;
+                Debug.Log($"User ID: {userId}");
+
+                PlayerPrefs.SetString("userId", userId);
+                PlayerPrefs.Save();
+
+                databaseManager.SaveUserInfoLocallyFromDatabase(userId, OnDatabaseOperationComplete);
+            }
+            else
+            {
+                Debug.LogError("User is null!");
+            }
         });
+    }
+
+    private void OnDatabaseOperationComplete()
+    {
+        SceneManager.LoadScene("MainMenuScene");
     }
 
     private void GoToSignUpScene()

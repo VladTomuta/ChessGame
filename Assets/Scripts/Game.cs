@@ -10,6 +10,7 @@ public class Game : MonoBehaviour
 
     //Positions and team for each chesspiece
     public GameObject chessPiece;
+    public Button resignButton;
     private GameObject[,] positions = new GameObject[8, 8];
     private GameObject[] playerBlack = new GameObject[16];
     private GameObject[] playerWhite = new GameObject[16];
@@ -22,6 +23,8 @@ public class Game : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        resignButton.onClick.AddListener(Resign);
+
         playerWhite = new GameObject[] {
             Create("white_rook", 0, 0),
             Create("white_knight", 1, 0),
@@ -65,6 +68,8 @@ public class Game : MonoBehaviour
             SetPosition(playerBlack[i]);
             SetPosition(playerWhite[i]);
         }
+
+
     }
 
     public GameObject Create(string name, int x, int y) {
@@ -126,7 +131,7 @@ public class Game : MonoBehaviour
         if (gameOver == true && Input.GetMouseButtonDown(0)) {
             gameOver = false;
 
-            SceneManager.LoadScene("Game");
+            SceneManager.LoadScene("MainMenuScene");
         }
     }
 
@@ -137,5 +142,10 @@ public class Game : MonoBehaviour
         GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " is the winner";
 
         GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
+    }
+
+    public void Resign() {
+        Debug.Log("You resigned the game");
+        SceneManager.LoadScene("MainMenuScene");
     }
 }
