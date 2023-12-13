@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class Chessman : MonoBehaviour
+public class Chessman : NetworkBehaviour
 {
     // References
-    public GameObject controller;
+    private GameObject controller;
     public GameObject movePlate;
 
     // Positions
@@ -23,11 +25,15 @@ public class Chessman : MonoBehaviour
     public Sprite black_king, black_queen, black_knight, black_bishop, black_rook, black_pawn;
     public Sprite white_king, white_queen, white_knight, white_bishop, white_rook, white_pawn;
 
+    void Start() {
+        Activate();
+    }
+
     public void Activate() {
         controller = GameObject.FindGameObjectWithTag("GameController");
 
         //take the instantiated location and adjust the transform
-        SetCoords();
+        SetCoordsServerRpc();
 
         switch (this.name) {
             case "black_king": this.GetComponent<SpriteRenderer>().sprite = black_king; player = "black"; break;
@@ -46,7 +52,8 @@ public class Chessman : MonoBehaviour
         }
     }
 
-    public void SetCoords() {
+    [ServerRpc(RequireOwnership = false)]
+    public void SetCoordsServerRpc() {
         float x = xBoard;
         float y = yBoard;
 
@@ -75,26 +82,63 @@ public class Chessman : MonoBehaviour
         return canBeCapturedEnPassant;
     }
 
-    public void SetXBoard(int x) {
+    [ServerRpc(RequireOwnership = false)]
+    public void SetXBoardServerRpc(int x) {
+        xBoard = x;
+        SetXBoardClientRpc(x);
+    }
+
+    [ClientRpc]
+    public void SetXBoardClientRpc(int x) {
         xBoard = x;
     }
 
-    public void SetYBoard(int y) {
+    [ServerRpc(RequireOwnership = false)]
+    public void SetYBoardServerRpc(int y) {
+        yBoard = y;
+        SetYBoardClientRpc(y);
+    }
+
+    [ClientRpc]
+    public void SetYBoardClientRpc(int y) {
         yBoard = y;
     }
 
-    public void SetHasMoved(bool hasMoved) {
-        this.hasMoved = hasMoved;
+    [ServerRpc(RequireOwnership = false)]
+    public void SetHasMovedServerRpc(NetworkObjectReference reference, bool hasMoved) {
+        SetHasMovedClientRpc(reference, hasMoved);
     }
 
-    public void SetCanBeCapturedEnPassent(bool canBeCapturedEnPassant) {
+    [ClientRpc]
+    public void SetHasMovedClientRpc(NetworkObjectReference reference, bool hasMoved) {
+        reference.TryGet(out NetworkObject obj);
+        Debug.Log(obj);
+        Chessman chessmanScript = obj.GetComponent<Chessman>();
+        chessmanScript.hasMoved = hasMoved;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetCanBeCapturedEnPassentServerRpc(bool canBeCapturedEnPassant) {
         this.canBeCapturedEnPassant = canBeCapturedEnPassant;
     }
 
     private void OnMouseUp() {
+
+        if(controller.GetComponent<Game>().GetCurrentPlayer() == "white" && !IsHost) {
+            return;
+        } else if(controller.GetComponent<Game>().GetCurrentPlayer() == "black" && IsHost){
+            return;
+        }
+
+        Debug.Log(controller.GetComponent<Game>().IsGameOver());
+        Debug.Log(controller.GetComponent<Game>().GetCurrentPlayer());
+        Debug.Log(player);
         if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().GetCurrentPlayer() == player) {
+            Debug.Log("Alo ne spawnam si noi?");
             DestroyMovePlates();
             InitiateMovePlates();
+        } else {
+            Debug.Log("Nu ne trezim");
         }
     }
 
@@ -106,6 +150,7 @@ public class Chessman : MonoBehaviour
     }
 
     public void InitiateMovePlates() {
+        Debug.Log(this.name);
         switch(this.name) {
             case "black_queen":
             case "white_queen":
@@ -219,6 +264,7 @@ public class Chessman : MonoBehaviour
 
     public void PointMovePlate(int x, int y) {
         Game gameScript = controller.GetComponent<Game>();
+        // Debug.Log("Position: x: " + x + " y: " + y);
         if (gameScript.PositionOnBoard(x, y)) {
             GameObject chessPiece = gameScript.GetPosition(x, y);
 

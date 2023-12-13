@@ -29,7 +29,7 @@ public class WelcomeScript : MonoBehaviour
     }
 
     private void PlayGame() {
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("GameScene");
     }
 
     private void Logout() {

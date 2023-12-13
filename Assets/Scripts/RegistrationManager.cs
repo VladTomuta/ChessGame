@@ -94,7 +94,7 @@ public class RegistrationManager : MonoBehaviour
             PlayerPrefs.Save();
 
             // Call a function to switch scenes or use Unity's SceneManager.LoadScene
-            SceneManager.LoadScene("Game");
+            SceneManager.LoadScene("MainMenuScene");
         });
     }
 

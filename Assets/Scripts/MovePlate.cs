@@ -1,7 +1,8 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class MovePlate : MonoBehaviour
+public class MovePlate : NetworkBehaviour
 {
     public GameObject controller;
 
@@ -28,13 +29,15 @@ public class MovePlate : MonoBehaviour
         Game gameScript = controller.GetComponent<Game>();
         Chessman chessmanScript = reference.GetComponent<Chessman>();
 
+
+
         if(attack) {
             GameObject chessPiece;
 
             if(gameScript.GetPosition(matrixX, matrixY)) {
                 chessPiece = gameScript.GetPosition(matrixX, matrixY);
-                if (chessPiece.name == "white_king") gameScript.Winner("black");
-                if (chessPiece.name == "black_king") gameScript.Winner("white");
+                if (chessPiece.name == "white_king") gameScript.WinnerServerRpc("black");
+                if (chessPiece.name == "black_king") gameScript.WinnerServerRpc("white");
             } else {
                 if (gameScript.GetCurrentPlayer() == "white") {
                     chessPiece = gameScript.GetPosition(matrixX, matrixY - 1);
@@ -43,51 +46,66 @@ public class MovePlate : MonoBehaviour
                 }
             }
 
-            Destroy(chessPiece);
+            gameScript.DestroyPieceServerRpc(chessPiece);
         }
 
-        gameScript.SetPositionEmpty(chessmanScript.GetXBoard(),
-                                    chessmanScript.GetYBoard());
+        gameScript.SetPositionEmptyServerRpc(chessmanScript.GetXBoard(),
+                                             chessmanScript.GetYBoard());
+        
+        Debug.Log("After move this tile is: " + gameScript.GetPosition(chessmanScript.GetXBoard(), chessmanScript.GetYBoard()));
 
-        gameScript.SetRefToPossibleEnPassantPawn(null);
+        
+
+        gameScript.SetRefToPossibleEnPassantPawnServerRpc(reference.GetComponent<NetworkObject>(), true);
 
         if(Math.Abs(chessmanScript.GetYBoard() - matrixY) == 2 && (reference.name == "white_pawn" || reference.name == "black_pawn")) {
-            gameScript.SetRefToPossibleEnPassantPawn(reference);
+            gameScript.SetRefToPossibleEnPassantPawnServerRpc(reference.GetComponent<NetworkObject>(), false);
         }
         
+
+        //DISABLED UNTIL MULTIPLAYER WORKS
         if(reference.name == "white_pawn" && matrixY == 7) {
-            Destroy(reference);
-            reference = gameScript.Create("white_queen", matrixX, matrixY);
+            gameScript.DestroyPieceServerRpc(reference.GetComponent<NetworkObject>());
+            //Destroy(reference);
+            //reference = gameScript.Create("white_queen", matrixX, matrixY).Value;
+            gameScript.CreateServerRpc("white_queen", matrixX, matrixY);
+            //reference = networkVariable.Value;
 
         } else if (reference.name == "black_pawn" && matrixY == 0) {
-            Destroy(reference);
-            reference = gameScript.Create("black_queen", matrixX, matrixY);
+            // Destroy(reference);
+            // reference = gameScript.Create("black_queen", matrixX, matrixY).Value;
+            gameScript.DestroyPieceServerRpc(reference.GetComponent<NetworkObject>());
+            gameScript.CreateServerRpc("black_queen", matrixX, matrixY);
+            //Destroy(reference);
+            //reference = gameScript.Create("white_queen", matrixX, matrixY).Value;
+            //gameScript.CreateServerRpc(ref reference, "black_queen", matrixX, matrixY);
+            //reference = networkVariable.Value;
+        } else {
+            chessmanScript.SetXBoardServerRpc(matrixX);
+            chessmanScript.SetYBoardServerRpc(matrixY);
+            chessmanScript.SetCoordsServerRpc();
+            chessmanScript.SetHasMovedServerRpc(reference.GetComponent<NetworkObject>() ,true);
+
+            gameScript.SetPositionServerRpc(reference.GetComponent<NetworkObject>());
         }
-
-        chessmanScript.SetXBoard(matrixX);
-        chessmanScript.SetYBoard(matrixY);
-        chessmanScript.SetCoords();
-        chessmanScript.SetHasMoved(true);
-
-        gameScript.SetPosition(reference);
 
         if(castlingRook) {
             Chessman rookChessmanScript = castlingRook.GetComponent<Chessman>();
 
-            gameScript.SetPositionEmpty(rookChessmanScript.GetXBoard(),
-                                        rookChessmanScript.GetYBoard());
+            gameScript.SetPositionEmptyServerRpc(rookChessmanScript.GetXBoard(),
+                                                 rookChessmanScript.GetYBoard());
                                         
             if(rookChessmanScript.GetXBoard() == 0) {
-                rookChessmanScript.SetXBoard(3);
+                rookChessmanScript.SetXBoardServerRpc(3);
             } else {
-                rookChessmanScript.SetXBoard(5);
+                rookChessmanScript.SetXBoardServerRpc(5);
             }
 
-            rookChessmanScript.SetYBoard(rookChessmanScript.GetYBoard());
-            rookChessmanScript.SetCoords();
-            rookChessmanScript.SetHasMoved(true);
+            rookChessmanScript.SetYBoardServerRpc(rookChessmanScript.GetYBoard());
+            rookChessmanScript.SetCoordsServerRpc();
+            rookChessmanScript.SetHasMovedServerRpc(reference.GetComponent<NetworkObject>(), true);
             
-            gameScript.SetPosition(castlingRook);
+            gameScript.SetPositionServerRpc(castlingRook.GetComponent<NetworkObject>());
         }
 
         gameScript.NextTurn();

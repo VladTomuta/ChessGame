@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using Unity.Collections;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -23,17 +21,11 @@ public class Game : NetworkBehaviour
     //private GameObject[] playerBlack = new GameObject[16];
     private NetworkVariable<GameObject>[] playerWhite = new NetworkVariable<GameObject>[16];
 
-    //private string currentPlayer = "white";
+    private string currentPlayer = "white";
+    private bool gameOver = false;
 
-    //true  - white's turn
-    //false - black's turn
-    private NetworkVariable<FixedString32Bytes> currentPlayer = new NetworkVariable<FixedString32Bytes>("white");
-
-    private NetworkVariable<bool> gameOver = new NetworkVariable<bool>(false);
-    //private bool gameOver = false;
 
     private NetworkVariable<bool> piecesHaveSpawned = new NetworkVariable<bool>(false);
-    private NetworkVariable<bool> isServerReady = new NetworkVariable<bool>(false);
 
    private  GameObject refToPossibleEnPassantPawn = null;
 
@@ -95,11 +87,10 @@ public class Game : NetworkBehaviour
         
     // }
 
-    [ServerRpc (RequireOwnership = false)]
-    public void InitializePiecesServerRpc() {
+    public void InitializePieces() {
         // Debug.Log("Piece have spawned? " + piecesHaveSpawned.Value);
 
-        //if (!piecesHaveSpawned.Value) {
+        if (!piecesHaveSpawned.Value) {
             playerWhite = new NetworkVariable<GameObject>[] {
                 Create("white_rook", 0, 0),
                 Create("white_knight", 1, 0),
@@ -138,23 +129,14 @@ public class Game : NetworkBehaviour
                 Create("black_pawn", 7, 6)
             };
 
-            
-
             // Set all piece positions on the board
             for (int i = 0; i < playerWhite.Length; i++){
-                Debug.Log(playerBlack[i].Value);
-                SetPositionServerRpc(playerBlack[i].Value.GetComponent<NetworkObject>());
-                SetPositionServerRpc(playerWhite[i].Value.GetComponent<NetworkObject>());
+                SetPosition(playerBlack[i].Value);
+                SetPosition(playerWhite[i].Value);
             }
 
             //piecesHaveSpawned.Value = true;
-        //}
-    }
-
-    [ServerRpc (RequireOwnership = false)]
-    public void CreateServerRpc(string name, int x, int y) {
-        NetworkVariable<GameObject> networkVariable = Create(name, x, y);
-        SetPositionServerRpc(networkVariable.Value.GetComponent<NetworkObject>());
+        }
     }
 
     public NetworkVariable<GameObject> Create(string name, int x, int y) {
@@ -165,133 +147,45 @@ public class Game : NetworkBehaviour
         // Debug.Log(obj.GetComponent<SpriteRenderer>().sprite.name);
         obj.GetComponent<NetworkObject>().Spawn(true);
 
-        Debug.Log(IsHost);
-        Debug.Log(IsClient);
-        Debug.Log(IsServer);
-
-        if (IsHost) {
-            do {
-                Debug.Log("Checking Server...");
-                CheckIfServerIsReadyServerRpc();
-            } while (isServerReady.Value == false);
-        }
-
-        Debug.Log("Intram in serverRpc");
-        CreateServerRpc(obj.GetComponent<NetworkObject>(), name, x, y);
-        Debug.Log("Iesim in serverRpc");
-
-        // Debug.Log(obj.name);
-        // Debug.Log(obj.GetComponent<Chessman>().GetXBoard());
-        // Debug.Log(obj.GetComponent<Chessman>().GetYBoard());
-        // Debug.Log(obj);
+        Debug.Log(obj.name);
+        Debug.Log(obj.GetComponent<Chessman>().GetXBoard());
+        Debug.Log(obj.GetComponent<Chessman>().GetYBoard());
+        Debug.Log(obj);
 
         return new NetworkVariable<GameObject>(obj);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void CreateServerRpc(NetworkObjectReference objRef, string name, int x, int y) {
-        Debug.Log("ServerRpc");
-        CreateClientRpc(objRef, name, x, y);
+    public void CreateServerRcp(GameObject obj, string name, int x, int y) {
+        CreateClientRcp(obj, name, x, y);
     }
 
     [ClientRpc]
-    private void CreateClientRpc(NetworkObjectReference objRef, string name, int x, int y) {
-        Debug.Log("ClientRpc");
-        objRef.TryGet(out NetworkObject obj);
+    private void CreateClientRcp(GameObject obj, string name, int x, int y) {
         Chessman chessmanScript = obj.GetComponent<Chessman>();
 
         chessmanScript.name = name;
-        chessmanScript.SetXBoardServerRpc(x);
-        chessmanScript.SetYBoardServerRpc(y);
-        chessmanScript.SetHasMovedServerRpc(objRef ,false);
+        chessmanScript.SetXBoard(x);
+        chessmanScript.SetYBoard(y);
+        chessmanScript.SetHasMoved(false);
         chessmanScript.Activate();
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void CheckIfServerIsReadyServerRpc() {
-        Debug.Log("Yes now it should be ready!");
-        isServerReady.Value = true;
-    }
+    public void SetPosition(GameObject obj) {
+        Chessman chessmanScript = obj.GetComponent<Chessman>();
 
-    [ServerRpc (RequireOwnership = false)]
-    public void SetPositionServerRpc(NetworkObjectReference obj) {
-        SetPositionClientRpc(obj);
-        // Chessman chessmanScript = obj.GetComponent<Chessman>();
-
-        // positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()] = new NetworkVariable<GameObject>(obj);
+        positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()] = new NetworkVariable<GameObject>(obj);
         // Debug.Log(chessmanScript.GetXBoard());
         // Debug.Log(chessmanScript.GetYBoard());
         // Debug.Log("Object added in positions: " + positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()]);
     }
 
-    [ClientRpc]
-    public void SetPositionClientRpc(NetworkObjectReference objectReference) {
-        objectReference.TryGet(out NetworkObject obj);
-        Debug.Log(obj);
-        Chessman chessmanScript = obj.GetComponent<Chessman>();
-
-        positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()] = new NetworkVariable<GameObject>(obj.GameObject());
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void SetPositionEmptyServerRpc(int x, int y) {
-        SetPositionEmptyClientRpc(x, y);
-    }
-
-    [ClientRpc]
-    public void SetPositionEmptyClientRpc(int x, int y) {
+    public void SetPositionEmpty(int x, int y) {
         positions[x, y] = null;
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void SetRefToPossibleEnPassantPawnServerRpc(NetworkObjectReference refToPossibleEnPassantPawn, bool setItNull) {
-        SetRefToPossibleEnPassantPawnClientRpc(refToPossibleEnPassantPawn, setItNull);
-    }
-
-    [ClientRpc]
-    public void SetRefToPossibleEnPassantPawnClientRpc(NetworkObjectReference refToPossibleEnPassantPawn, bool setItNull) {
-
-        if(setItNull) {
-            this.refToPossibleEnPassantPawn = null;
-            return;
-        }
-
-        refToPossibleEnPassantPawn.TryGet(out NetworkObject obj);
+    public void SetRefToPossibleEnPassantPawn(GameObject refToPossibleEnPassantPawn) {
         this.refToPossibleEnPassantPawn = refToPossibleEnPassantPawn;
-    }
-
-    public NetworkVariable<GameObject>[] GetPlayerWhitePieces() {
-        return playerWhite;
-    }
-
-    public int GetPlayerWhitePieceByNOR(NetworkObjectReference networkObjectReference) {
-        for (int i = 0; i < playerWhite.Length; i++)
-        {
-            // Assuming GameObject has an appropriate equality check (e.g., comparing an ID or some property)
-            if (playerWhite[i].Equals(networkObjectReference))
-            {
-                return i; // Return the position if found
-            }
-        }
-
-        return -1;
-    }
-
-    public int GetPlayerBlackPieceByNOR(NetworkObjectReference networkObjectReference) {
-        for (int i = 0; i < playerBlack.Length; i++)
-        {
-            // Assuming GameObject has an appropriate equality check (e.g., comparing an ID or some property)
-            if (playerBlack[i].Equals(networkObjectReference))
-            {
-                return i; // Return the position if found
-            }
-        }
-
-        return -1;
-    }
-
-    public NetworkVariable<GameObject>[] GetPlayerBlackPieces() {
-        return playerBlack;
     }
 
     public GameObject GetPosition(int x, int y) {
@@ -308,7 +202,7 @@ public class Game : NetworkBehaviour
     }
 
     public string GetCurrentPlayer() {
-        return currentPlayer.Value.ToString();
+        return currentPlayer;
     }
 
     public GameObject GetRefToPossibleEnPassantPawn() {
@@ -321,43 +215,32 @@ public class Game : NetworkBehaviour
     }
 
     public bool IsGameOver() {
-        return gameOver.Value;
+        return gameOver;
     }
 
     public void NextTurn() {
-        ChangeCurrentPlayerServerRpc();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void ChangeCurrentPlayerServerRpc() {
-        if (currentPlayer.Value == "white") {
-            currentPlayer.Value = "black";
+        if (currentPlayer == "white") {
+            currentPlayer = "black";
         } else {
-            currentPlayer.Value = "white";
+            currentPlayer = "white";
         }
     }
 
     public void Update()
     {
-        if (gameOver.Value == true && Input.GetMouseButtonDown(0)) {
-            SetGameOverServerRpc(false);
+        if (gameOver == true && Input.GetMouseButtonDown(0)) {
+            gameOver = false;
 
             SceneManager.LoadScene("MainMenuScene");
         }
 
         if (Input.GetKeyDown(KeyCode.T)) {
-            InitializePiecesServerRpc();
+            InitializePieces();
         }
     }
 
-    [ServerRpc (RequireOwnership = false)]
-    public void WinnerServerRpc(FixedString32Bytes playerWinner) {
-        WinnerClientRpc(playerWinner);
-    }
-
-    [ClientRpc]
-    public void WinnerClientRpc(FixedString32Bytes playerWinner) {
-        SetGameOverServerRpc(true);
+    public void Winner(string playerWinner) {
+        gameOver = true;
 
         GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().enabled = true;
         GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " is the winner";
@@ -368,27 +251,5 @@ public class Game : NetworkBehaviour
     public void Resign() {
         Debug.Log("You resigned the game");
         SceneManager.LoadScene("MainMenuScene");
-    }
-
-    [ServerRpc (RequireOwnership = false)]
-    public void DestroyPieceServerRpc(NetworkObjectReference piece) {
-        Debug.Log("I am going to destroy this on the server :D");
-        //DestroyPieceClientRpc(piece);
-        piece.TryGet(out NetworkObject obj);
-        obj.GetComponent<NetworkObject>().Despawn();
-        //Destroy(obj);
-        //OnNetworkDespawn();
-    }
-
-    [ClientRpc]
-    public void DestroyPieceClientRpc(NetworkObjectReference piece) {
-        Debug.Log("I am going to destroy this on the client :D");
-        piece.TryGet(out NetworkObject obj);
-        Destroy(obj);
-    }
-
-    [ServerRpc (RequireOwnership = false)]
-    public void SetGameOverServerRpc(bool state) {
-        gameOver.Value = state;
     }
 }
