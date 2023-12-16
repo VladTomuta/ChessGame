@@ -29,7 +29,9 @@ public class WelcomeScript : MonoBehaviour
     }
 
     private void PlayGame() {
+        //DISABLED DUE TO DEBUGGING
         SceneManager.LoadScene("GameScene");
+        //SceneManager.LoadScene("LobbyScene");
     }
 
     private void Logout() {

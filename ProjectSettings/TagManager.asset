@@ -8,6 +8,7 @@ TagManager:
   - WinnerText
   - RestartText
   - Loading
+  - Debug
   layers:
   - Default
   - TransparentFX

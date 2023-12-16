@@ -138,9 +138,9 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   bundleVersion: 1.0.2
   preloadedAssets:
-  - {fileID: 3858922310571530193, guid: c53ca5ffe3a00114cb7db6deb042191d, type: 2}
-  - {fileID: 11400000, guid: d984f9c462f178e48a2402b64f622352, type: 2}
+  - {fileID: 6675768807179966615, guid: c53ca5ffe3a00114cb7db6deb042191d, type: 2}
   - {fileID: 11400000, guid: 74d03ae0bb5752041aee35cb343c28b1, type: 2}
+  - {fileID: 11400000, guid: d984f9c462f178e48a2402b64f622352, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -290,7 +290,7 @@ PlayerSettings:
   - m_BuildTarget: 
     m_Icons:
     - serializedVersion: 2
-      m_Icon: {fileID: 2800000, guid: b6d71cc940364ee4da92c6f953c002b3, type: 3}
+      m_Icon: {fileID: 2800000, guid: 5a668bb3778137d488782dd483ff9535, type: 3}
       m_Width: 128
       m_Height: 128
       m_Kind: 0
@@ -799,7 +799,8 @@ PlayerSettings:
   webGLMemoryGeometricGrowthStep: 0.2
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    Server: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
@@ -906,10 +907,10 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: ab7003bd-9e63-41e4-81df-383cfac5b4e1
+  cloudProjectId: 27c8f74d-a91e-4c25-a149-8583bdc99cf0
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Chess_App
+  projectName: ChessGameFinal
   organizationId: vandigal
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

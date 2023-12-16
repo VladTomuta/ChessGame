@@ -18,11 +18,14 @@ EditorBuildSettings:
     path: Assets/Scenes/LoginScene.unity
     guid: 1a6be28aee0932c4498e5331381d12ec
   - enabled: 1
-    path: Assets/Scenes/GameScene.unity
-    guid: 3fc8acdd13e6c734bafef6554d6fdbcd
-  - enabled: 0
     path: Assets/Scenes/MainMenuScene.unity
     guid: 3004a6ee4fcfe614fb17077a70c09e7c
+  - enabled: 1
+    path: Assets/Scenes/LobbyScene.unity
+    guid: 0ec414741fc39d84ea70622d3f86b4e5
+  - enabled: 1
+    path: Assets/Scenes/GameScene.unity
+    guid: 3fc8acdd13e6c734bafef6554d6fdbcd
   m_configObjects:
     com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: 74d03ae0bb5752041aee35cb343c28b1, type: 2}
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: c53ca5ffe3a00114cb7db6deb042191d, type: 2}
