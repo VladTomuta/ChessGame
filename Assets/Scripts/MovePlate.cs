@@ -2,9 +2,13 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 
-public class MovePlate : NetworkBehaviour
+
+//ERA NewtworkBehavior DIN CEVA MOTIV
+public class MovePlate : MonoBehaviour
 {
     public GameObject controller;
+
+    [SerializeField] Sprite attackMovePlate; 
 
     GameObject reference = null;
 
@@ -20,7 +24,9 @@ public class MovePlate : NetworkBehaviour
     public void Start() {
         if (attack) {
             //Change to red
-            gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+            //gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+            gameObject.GetComponent<SpriteRenderer>().sprite = attackMovePlate;
+            gameObject.GetComponent<Transform>().localScale = new Vector3(4.7f, 4.7f, -1f);
         }
     }
 

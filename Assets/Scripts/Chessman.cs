@@ -1,7 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
+using System.Numerics;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Chessman : NetworkBehaviour
@@ -33,7 +32,7 @@ public class Chessman : NetworkBehaviour
         controller = GameObject.FindGameObjectWithTag("GameController");
 
         //take the instantiated location and adjust the transform
-        SetCoordsServerRpc();
+        SetCoordsServerRpc(true);
 
         switch (this.name) {
             case "black_king": this.GetComponent<SpriteRenderer>().sprite = black_king; player = "black"; break;
@@ -53,18 +52,38 @@ public class Chessman : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SetCoordsServerRpc() {
+    public void SetCoordsServerRpc(bool isInitialSpawn = false) {
+        SetCoordsClientRpc(isInitialSpawn);
+    }
+
+    [ClientRpc]
+    public void SetCoordsClientRpc(bool isInitialSpawn = false) {
         float x = xBoard;
         float y = yBoard;
 
         x *= 0.66f;
         y *= 0.66f;
 
-        x += -2.3f;
-        y += -2.3f;
+        x += -2.31f;
+        y += -2.31f;
 
-        this.transform.position = new Vector3(x, y, -1.0f);
+        UnityEngine.Vector3 targetPosition = new UnityEngine.Vector3(x, y, -1.0f);
+        this.transform.position = targetPosition; 
+
+        if(!IsHost) {
+            this.transform.rotation = new UnityEngine.Quaternion(0, 0, 180, 0);
+        }
     }
+
+    // IEnumerator AllowSmoothMove(string lobbyId, float waitTimeSeconds)
+    // {
+    //     var delay = new WaitForSecondsRealtime(waitTimeSeconds);
+
+    //     Debug.Log("heartbeat sent from coroutine");
+    //     LobbyService.Instance.SendHeartbeatPingAsync(lobbyId);
+    //     yield return delay;
+
+    // }
 
     public int GetXBoard() {
         return xBoard;
@@ -359,10 +378,22 @@ public class Chessman : NetworkBehaviour
         x *= 0.66f;
         y *= 0.66f;
 
-        x += -2.3f;
-        y += -2.3f;
+        x += -2.31f;
+        y += -2.31f;
 
-        GameObject MovePlate = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
+        // if (x > 0) {
+        //     x += 0.01f;
+        // } else {
+        //     x -= 0.01f;
+        // }
+
+        // if (y > 0) {
+        //     y += 0.01f;
+        // } else {
+        //     y -= 0.01f;
+        // }
+
+        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, -3.0f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetReference(gameObject);
@@ -376,10 +407,10 @@ public class Chessman : NetworkBehaviour
         x *= 0.66f;
         y *= 0.66f;
 
-        x += -2.3f;
-        y += -2.3f;
+        x += -2.31f;
+        y += -2.31f;
 
-        GameObject movePlate = Instantiate(this.movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
+        GameObject movePlate = Instantiate(this.movePlate, new UnityEngine.Vector3(x, y, -3.0f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = movePlate.GetComponent<MovePlate>();
         movePlateScript.SetAttack(true);
@@ -397,7 +428,7 @@ public class Chessman : NetworkBehaviour
         x += -2.3f;
         y += -2.3f;
 
-        GameObject MovePlate = Instantiate(movePlate, new Vector3(x, y, -3.0f), Quaternion.identity);
+        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, -3.0f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetCastling(rook);

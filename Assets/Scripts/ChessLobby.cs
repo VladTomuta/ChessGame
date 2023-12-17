@@ -15,6 +15,8 @@ public class ChessLobby : MonoBehaviour
     public static ChessLobby Instance { get; private set; }
     public string KEY_START_GAME { get; private set; } = "StartGameKey";
 
+    [SerializeField] GameObject canvasManager;
+
     private Lobby joinedLobby;
     private Lobby hostLobby;
 
@@ -27,14 +29,14 @@ public class ChessLobby : MonoBehaviour
 
     private float heartbeatTimer;
 
-    private TMP_Text debugText;
+    //private TMP_Text debugText;
+
+    
 
     private void Awake() {
         Instance = this;
 
         DontDestroyOnLoad(gameObject);
-
-        debugText = GameObject.FindGameObjectWithTag("Debug").GetComponent<TMP_Text>();
 
         InitializaUnityAuthentication();
     }
@@ -69,18 +71,7 @@ public class ChessLobby : MonoBehaviour
 
         PrintLobbies();
 
-        //CheckForLobbyWithEmptySlot();
-
         QuickJoinLobby();
-
-        // if (await CheckForLobbyWithEmptySlot()) {
-        //     Debug.Log("A player is waiting for an opponent. Connecting with him");
-        //     QuickJoinLobby();
-        // } else {
-        //     Debug.Log("Creating lobby");
-        //     CreateLobby("MyLobby", false);
-        // }
-        
     }
 
     public async void CreateLobby(string lobbyName, bool isPrivate) {
@@ -96,7 +87,8 @@ public class ChessLobby : MonoBehaviour
             joinedLobby = hostLobby;
 
             Debug.Log("Created lobby: " + hostLobby.Id);
-            debugText.text = "Created lobby: " + hostLobby.Id;
+            //debugText.text = "Created lobby: " + hostLobby.Id;
+            
 
 
             //NetworkManager.Singleton.StartHost();
@@ -110,7 +102,8 @@ public class ChessLobby : MonoBehaviour
         try {
             joinedLobby = await LobbyService.Instance.QuickJoinLobbyAsync();
             Debug.Log("Joined lobby: " + joinedLobby.Id);
-            debugText.text = "Joined lobby: " + joinedLobby.Id;
+            //debugText.text = "Joined lobby: " + joinedLobby.Id;
+            canvasManager.GetComponent<CanvasManager>().setText("Opponent found");
 
             //StartGame();
         } catch (LobbyServiceException e) {
@@ -172,6 +165,7 @@ public class ChessLobby : MonoBehaviour
                 joinedLobby = lobby;
 
                 if (hostLobby != null && lobby.AvailableSlots == 0 && !gameHasStarted) {
+                    canvasManager.GetComponent<CanvasManager>().setText("Opponent found");
                     StartGame();
                     gameHasStarted = true;
                 }
@@ -180,11 +174,13 @@ public class ChessLobby : MonoBehaviour
                     if (hostLobby == null) {
                         bool didItWork = await ChessRelay.Instance.StartClientWithRelay(joinedLobby.Data[KEY_START_GAME].Value);
 
-                        if(didItWork) {
-                            debugText.text = "A mers";
-                        } else {
-                            debugText.text = "Nu a mers";
-                        }
+                        // if(didItWork) {
+                        //     //debugText.text = "A mers";
+                        //     canvasManager.GetComponent<CanvasManager>().setText("A mers");
+                        // } else {
+                        //     //debugText.text = "Nu a mers";
+                        //     canvasManager.GetComponent<CanvasManager>().setText("Nu a mers");
+                        // }
 
                         StartCoroutine(WaitForConnectedStatus());
                     }
@@ -218,16 +214,16 @@ public class ChessLobby : MonoBehaviour
     IEnumerator WaitForConnectedStatus()
     {
         Debug.Log("Am intrat in functie!");
-        debugText.text = "Am intrat in functie!";
+        //debugText.text = "Am intrat in functie!";
         if (NetworkManager.Singleton.IsConnectedClient.ToString() == "False") {
             Debug.Log("goood progress");
-            debugText.text = "goood progress";
+            //debugText.text = "goood progress";
         }
 
         int i = 0;
 
         do {
-            debugText.text = "Waiting for " + i + " seconds";
+            //debugText.text = "Waiting for " + i + " seconds";
             yield return new WaitForSeconds(1f);
             i++;
         } while (NetworkManager.Singleton.IsConnectedClient.ToString() == "False");
@@ -235,11 +231,11 @@ public class ChessLobby : MonoBehaviour
         // Wait for 3 seconds
         //yield return new WaitForSeconds(1f);
         Debug.Log(NetworkManager.Singleton.IsConnectedClient.ToString());
-        debugText.text = NetworkManager.Singleton.IsConnectedClient.ToString();
+        //debugText.text = NetworkManager.Singleton.IsConnectedClient.ToString();
 
         if (NetworkManager.Singleton.IsConnectedClient.ToString() != "False") {
             Debug.Log("this is it");
-            debugText.text = "this is it";
+            //debugText.text = "this is it";
         }
 
         //Debug.Log(NetworkManager.Singleton.IsConnectedClient);

@@ -13,8 +13,14 @@ public class LoginManager : MonoBehaviour
     public Button loginButton;
     public Button signUpButton;
     public DatabaseManager databaseManager;
+    public GameObject loadingCircle;
 
     private FirebaseAuth auth;
+
+    private void Awake()
+    {
+        loadingCircle.gameObject.SetActive(false);
+    }
 
     private void Start()
     {
@@ -35,6 +41,7 @@ public class LoginManager : MonoBehaviour
 
     private void Login()
     {
+        loadingCircle.gameObject.SetActive(true);
         string email = emailInput.text;
         string password = passwordInput.text;
 

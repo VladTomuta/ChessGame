@@ -7,7 +7,6 @@ TagManager:
   - MovePlate
   - WinnerText
   - RestartText
-  - Loading
   - Debug
   layers:
   - Default

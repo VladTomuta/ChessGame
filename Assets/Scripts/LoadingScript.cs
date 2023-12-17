@@ -19,10 +19,4 @@ public class LoadingScript : MonoBehaviour
             SceneManager.LoadScene("MainMenuScene");
         } 
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

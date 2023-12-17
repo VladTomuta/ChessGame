@@ -15,9 +15,15 @@ public class RegistrationManager : MonoBehaviour
     public TMP_InputField confirmPasswordInput;
     public Button signUpButton;
     public Button loginButton;
+    public GameObject loadingCircle;
 
     private FirebaseAuth auth;
     private FirebaseFirestore firestoreDatabase;
+
+    private void Awake()
+    {
+        loadingCircle.gameObject.SetActive(false);
+    }
 
     private async void Start()
     {
@@ -57,6 +63,7 @@ public class RegistrationManager : MonoBehaviour
 
     private void SignUp()
     {
+        loadingCircle.gameObject.SetActive(true);
         string username = usernameInput.text;
         string email = emailInput.text;
         string password = passwordInput.text;
@@ -71,7 +78,7 @@ public class RegistrationManager : MonoBehaviour
 
         // Continue with user registration
         auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
-{
+        {
             if (task.IsCanceled || task.IsFaulted)
             {
                 Debug.LogError($"Failed to create user with {task.Exception}");
