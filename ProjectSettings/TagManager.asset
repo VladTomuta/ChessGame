@@ -8,6 +8,8 @@ TagManager:
   - WinnerText
   - RestartText
   - Debug
+  - LastMove
+  - OpponentImage
   layers:
   - Default
   - TransparentFX

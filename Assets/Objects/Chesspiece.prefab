@@ -121,6 +121,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movePlate: {fileID: 2614884297208751568, guid: 191351490d10eb34883ad13fef905bbb, type: 3}
+  lastMove: {fileID: 690071160178940668, guid: 043544c21513f9c44809200c5f368aa7, type: 3}
   black_king: {fileID: 21300000, guid: 134eca61712ddbf40b9bd84352fccfd2, type: 3}
   black_queen: {fileID: 21300000, guid: d8550a27ebbf15b4ca83ed4a365940fc, type: 3}
   black_knight: {fileID: 21300000, guid: ac4876e0eebf8df4bab4f14f68e38a9c, type: 3}

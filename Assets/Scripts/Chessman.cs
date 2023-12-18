@@ -8,6 +8,7 @@ public class Chessman : NetworkBehaviour
     // References
     private GameObject controller;
     public GameObject movePlate;
+    public GameObject lastMove;
 
     // Positions
     private int xBoard = -1;
@@ -32,7 +33,7 @@ public class Chessman : NetworkBehaviour
         controller = GameObject.FindGameObjectWithTag("GameController");
 
         //take the instantiated location and adjust the transform
-        SetCoordsServerRpc(true);
+        SetCoordsServerRpc();
 
         switch (this.name) {
             case "black_king": this.GetComponent<SpriteRenderer>().sprite = black_king; player = "black"; break;
@@ -52,12 +53,12 @@ public class Chessman : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SetCoordsServerRpc(bool isInitialSpawn = false) {
-        SetCoordsClientRpc(isInitialSpawn);
+    public void SetCoordsServerRpc() {
+        SetCoordsClientRpc();
     }
 
     [ClientRpc]
-    public void SetCoordsClientRpc(bool isInitialSpawn = false) {
+    public void SetCoordsClientRpc() {
         float x = xBoard;
         float y = yBoard;
 
@@ -154,15 +155,15 @@ public class Chessman : NetworkBehaviour
         Debug.Log(player);
         if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().GetCurrentPlayer() == player) {
             Debug.Log("Alo ne spawnam si noi?");
-            DestroyMovePlates();
+            DestroyMovePlates("MovePlate");
             InitiateMovePlates();
         } else {
             Debug.Log("Nu ne trezim");
         }
     }
 
-    public void DestroyMovePlates() {
-        GameObject[] movePlates = GameObject.FindGameObjectsWithTag("MovePlate");
+    public void DestroyMovePlates(string tag) {
+        GameObject[] movePlates = GameObject.FindGameObjectsWithTag(tag);
         for (int i = 0; i < movePlates.Length; i++) {
             Destroy(movePlates[i]);
         }
@@ -381,18 +382,6 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        // if (x > 0) {
-        //     x += 0.01f;
-        // } else {
-        //     x -= 0.01f;
-        // }
-
-        // if (y > 0) {
-        //     y += 0.01f;
-        // } else {
-        //     y -= 0.01f;
-        // }
-
         GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, -3.0f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
@@ -458,5 +447,39 @@ public class Chessman : NetworkBehaviour
         }
 
         return true;
+    }
+
+    [ServerRpc (RequireOwnership = false)]
+    public void SpawnLastMoveServerRpc(int oldX, int oldY, int newX, int newY) {
+        DestroyAllLastMovesClientRpc("LastMove");
+        SpawnLastMoveClientRpc(oldX, oldY, newX, newY);
+    }
+
+    [ClientRpc]
+    public void SpawnLastMoveClientRpc(int oldX, int oldY, int newX, int newY) {
+        LastMoveSpawn(oldX, oldY);
+        LastMoveSpawn(newX, newY);
+    }
+
+    [ClientRpc]
+    public void DestroyAllLastMovesClientRpc(string tag) {
+        DestroyMovePlates(tag);
+    }
+
+    public void LastMoveSpawn(int matrixX, int matrixY) {
+        float x = matrixX;
+        float y = matrixY;
+
+        x *= 0.66f;
+        y *= 0.66f;
+
+        x += -2.31f;
+        y += -2.31f;
+
+        GameObject MovePlate = Instantiate(lastMove, new UnityEngine.Vector3(x, y, 0.0f), UnityEngine.Quaternion.identity);
+
+        MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
+        movePlateScript.SetReference(gameObject);
+        movePlateScript.SetCoords(matrixX, matrixY);
     }
 } 

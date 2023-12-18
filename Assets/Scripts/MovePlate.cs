@@ -35,7 +35,10 @@ public class MovePlate : MonoBehaviour
         Game gameScript = controller.GetComponent<Game>();
         Chessman chessmanScript = reference.GetComponent<Chessman>();
 
+        chessmanScript.SpawnLastMoveServerRpc(chessmanScript.GetXBoard(), chessmanScript.GetYBoard(), matrixX, matrixY);
 
+        Debug.Log("ASTA E POZITIA DIN CARE AM PLECAT: x = " + chessmanScript.GetXBoard() + "; y = " + chessmanScript.GetYBoard());
+        Debug.Log("ASTA E POZITIA LA CARE AM AJUNS: x = " + matrixX + "; y = " + matrixY);
 
         if(attack) {
             GameObject chessPiece;
@@ -67,7 +70,6 @@ public class MovePlate : MonoBehaviour
         if(Math.Abs(chessmanScript.GetYBoard() - matrixY) == 2 && (reference.name == "white_pawn" || reference.name == "black_pawn")) {
             gameScript.SetRefToPossibleEnPassantPawnServerRpc(reference.GetComponent<NetworkObject>(), false);
         }
-        
 
         //DISABLED UNTIL MULTIPLAYER WORKS
         if(reference.name == "white_pawn" && matrixY == 7) {
@@ -116,7 +118,7 @@ public class MovePlate : MonoBehaviour
 
         gameScript.NextTurn();
 
-        chessmanScript.DestroyMovePlates();
+        chessmanScript.DestroyMovePlates("MovePlate");
     }
 
     public void SetCoords(int x, int y) {
