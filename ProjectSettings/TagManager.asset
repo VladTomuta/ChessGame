@@ -10,6 +10,7 @@ TagManager:
   - Debug
   - LastMove
   - OpponentImage
+  - Lobby
   layers:
   - Default
   - TransparentFX

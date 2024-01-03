@@ -35,12 +35,23 @@ public class DatabaseManager : MonoBehaviour
                     // Do something with the field value
                     Debug.Log($"Field 'username' has value: {username}");
                     PlayerPrefs.SetString("username", username.ToString());
-                    PlayerPrefs.Save();
                 }
                 else
                 {
                     Debug.LogWarning("Field 'username' not found in the document.");
                 }
+
+                if (data.TryGetValue("rating", out object rating))
+                {
+                    Debug.Log($"Field 'rating' has value: {rating}");
+                    PlayerPrefs.SetString("rating", rating.ToString());
+                }
+                else
+                {
+                    Debug.LogWarning("Field 'rating' not found in the document.");
+                }
+
+                PlayerPrefs.Save();
 
                 onDatabaseOperationComplete?.Invoke();
 

@@ -130,10 +130,11 @@ public class RegistrationManager : MonoBehaviour
                     Debug.Log("Username: " + username);
                     Debug.Log("Email: " + email);
 
-                    AddDocumentToCollection(userId, username);
+                    AddDocumentToCollection(userId, username, 1000);
 
                     PlayerPrefs.SetString("userId", userId);
                     PlayerPrefs.SetString("username", username);
+                    PlayerPrefs.SetString("rating", "1000");
                     PlayerPrefs.Save();
 
                     // Call a function to switch scenes or use Unity's SceneManager.LoadScene
@@ -156,7 +157,7 @@ public class RegistrationManager : MonoBehaviour
         SceneManager.LoadScene("LoginScene");
     }
 
-    private void AddDocumentToCollection(string userId, string newUsername)
+    private void AddDocumentToCollection(string userId, string newUsername, int startingRating)
     {
         // Get a reference to the collection
         CollectionReference userCollectionRef = firestoreDatabase.Collection("Users");
@@ -169,7 +170,8 @@ public class RegistrationManager : MonoBehaviour
 
         User user = new User
         {
-            username = newUsername
+            username = newUsername,
+            rating = startingRating
         };
 
         userDocumentRef.SetAsync(user).ContinueWithOnMainThread(task => {

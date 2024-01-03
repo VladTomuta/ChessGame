@@ -29,9 +29,7 @@ public class ChessLobby : MonoBehaviour
 
     private float heartbeatTimer;
 
-    //private TMP_Text debugText;
-
-    
+    private bool clientStartedRelay = false;
 
     private void Awake() {
         Instance = this;
@@ -81,16 +79,15 @@ public class ChessLobby : MonoBehaviour
                 IsPrivate = isPrivate,
                 Data = new Dictionary<string, DataObject> {
                     { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") }
-                }
+                },
+                Player = GetPlayer()
             });
 
             joinedLobby = hostLobby;
 
+            GetPlayers();
             Debug.Log("Created lobby: " + hostLobby.Id);
             //debugText.text = "Created lobby: " + hostLobby.Id;
-            
-
-
             //NetworkManager.Singleton.StartHost();
 
         } catch (LobbyServiceException e) {
@@ -100,8 +97,12 @@ public class ChessLobby : MonoBehaviour
 
     public async void QuickJoinLobby() {
         try {
-            joinedLobby = await LobbyService.Instance.QuickJoinLobbyAsync();
+            QuickJoinLobbyOptions quickJoinLobbyOptions = new QuickJoinLobbyOptions {
+                Player = GetPlayer()
+            };
+            joinedLobby = await LobbyService.Instance.QuickJoinLobbyAsync(quickJoinLobbyOptions);
             Debug.Log("Joined lobby: " + joinedLobby.Id);
+            GetPlayers();
             //debugText.text = "Joined lobby: " + joinedLobby.Id;
             canvasManager.GetComponent<CanvasManager>().setText("Opponent found");
 
@@ -155,14 +156,15 @@ public class ChessLobby : MonoBehaviour
     }
 
     public async void HandleLobbyPolling() {
-        if (joinedLobby != null) {
+        if (joinedLobby != null && clientStartedRelay == false) {
             lobbyUpdateTimer -= Time.deltaTime;
             if (lobbyUpdateTimer < 0f) {
-                Debug.Log(3);
                 lobbyUpdateTimer = lobbyUpdateTimerMax;
 
                 Lobby lobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
                 joinedLobby = lobby;
+
+                GetPlayers();
 
                 if (hostLobby != null && lobby.AvailableSlots == 0 && !gameHasStarted) {
                     canvasManager.GetComponent<CanvasManager>().setText("Opponent found");
@@ -185,7 +187,7 @@ public class ChessLobby : MonoBehaviour
                         StartCoroutine(WaitForConnectedStatus());
                     }
 
-                    joinedLobby = null;
+                    clientStartedRelay = true;
                 }
             }
         }
@@ -205,6 +207,7 @@ public class ChessLobby : MonoBehaviour
                 });
 
                 joinedLobby = lobby;
+                hostLobby = lobby;
             } catch (LobbyServiceException e) {
                 Debug.Log(e);
             }
@@ -245,6 +248,28 @@ public class ChessLobby : MonoBehaviour
         //debugText.text = "Three seconds have passed!";
         GameObject controller = GameObject.FindGameObjectWithTag("GameController");
         controller.GetComponent<Game>().InitializePiecesServerRpc();
-        GameObject.FindGameObjectWithTag("Loading").GetComponent<Text>().enabled = false;
+        //GameObject.FindGameObjectWithTag("Loading").GetComponent<Text>().enabled = false;
+    }
+
+    private Player GetPlayer() {
+        return new Player {
+            Data = new Dictionary<string, PlayerDataObject> {
+                { "PlayerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, PlayerPrefs.GetString("username"))},
+                { "PlayerRating", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, PlayerPrefs.GetString("rating")) },
+                { "PlayerId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, PlayerPrefs.GetString("userId")) }
+            }
+        };
+    }
+
+    public Player[] GetPlayers () {
+        Lobby lobby = joinedLobby;
+        if (lobby == null) {
+            lobby = hostLobby;
+        }
+        Debug.Log("Players in Lobby " + lobby.Name);
+        foreach (Player player in lobby.Players) {
+            Debug.Log("Player: " + player.Data["PlayerName"].Value + player.Data["PlayerRating"].Value);
+        }
+        return lobby.Players.ToArray();
     }
 }

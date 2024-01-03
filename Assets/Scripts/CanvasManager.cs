@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
+using Unity.Services.Lobbies.Models;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,7 +28,7 @@ public class CanvasManager : NetworkBehaviour
         loadingText.text = text;
     }
 
-    public void loadingIsDone() {
+    public void loadingIsDone(string playerName1, string playerName2, string playerRating1, string playerRating2) {
         Debug.Log("Hei distrugem si noi ceva?");
         resignButton.gameObject.SetActive(true);
         opponentImage.gameObject.SetActive(true);
@@ -40,9 +42,11 @@ public class CanvasManager : NetworkBehaviour
         if(!IsHost) {
             GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
             camera.GetComponent<Transform>().rotation = new Quaternion(0,0, 180, 0);
+            opponentName.text = playerName1 + "\n" + playerRating1;
         } else {
             GameObject opponentImage = GameObject.FindGameObjectWithTag("OpponentImage");
             opponentImage.GetComponent<Image>().sprite = blackKing;
+            opponentName.text = playerName2 + "\n" + playerRating2;
         }
     }
 }

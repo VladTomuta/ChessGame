@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.Services.Lobbies.Models;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,7 +11,6 @@ using UnityEngine.UI;
 
 public class Game : NetworkBehaviour
 {
-
     //Positions and team for each chesspiece
     public GameObject chessPiece;
     public Button resignButton;
@@ -38,6 +38,13 @@ public class Game : NetworkBehaviour
     private NetworkVariable<bool> isServerReady = new NetworkVariable<bool>(false);
 
     private  GameObject refToPossibleEnPassantPawn = null;
+    private Player[] players = new Player[2];
+    private NetworkVariable<FixedString32Bytes> playerName1 = new NetworkVariable<FixedString32Bytes>("player1");
+    private NetworkVariable<FixedString32Bytes> playerName2 = new NetworkVariable<FixedString32Bytes>("player2");
+    private NetworkVariable<FixedString32Bytes> playerRating1 = new NetworkVariable<FixedString32Bytes>("rating1");
+    private NetworkVariable<FixedString32Bytes> playerRating2 = new NetworkVariable<FixedString32Bytes>("rating2");
+    private NetworkVariable<FixedString32Bytes> playerId1 = new NetworkVariable<FixedString32Bytes>("id1");
+    private NetworkVariable<FixedString32Bytes> playerId2 = new NetworkVariable<FixedString32Bytes>("id2");
 
     // Start is called before the first frame update
     // void Start()
@@ -99,6 +106,30 @@ public class Game : NetworkBehaviour
 
     [ServerRpc (RequireOwnership = false)]
     public void InitializePiecesServerRpc() {
+        GameObject lobbyInfo = GameObject.FindGameObjectWithTag("Lobby");
+        players = lobbyInfo.GetComponent<ChessLobby>().GetPlayers();
+        
+
+        Debug.Log("ASTEA SUNT VALORILE DIN PLAYERS:");
+        Debug.Log(players[0].Data["PlayerName"].Value);
+        Debug.Log(players[0].Data["PlayerRating"].Value);
+        Debug.Log(players[1].Data["PlayerName"].Value);
+        Debug.Log(players[1].Data["PlayerRating"].Value);
+
+        SetPlayersServerRpc(
+            players[0].Data["PlayerName"].Value,
+            players[0].Data["PlayerRating"].Value,
+            players[1].Data["PlayerName"].Value,
+            players[1].Data["PlayerRating"].Value
+        );
+
+        playerName1.Value = players[0].Data["PlayerName"].Value;
+        playerName2.Value = players[1].Data["PlayerName"].Value;
+        playerId1.Value = players[0].Data["PlayerId"].Value;
+        playerId2.Value = players[0].Data["PlayerId"].Value;
+        playerRating1.Value = players[0].Data["PlayerRating"].Value;
+        playerRating2.Value = players[1].Data["PlayerRating"].Value;
+
         playerWhite = new NetworkVariable<GameObject>[] {
             Create("white_rook", 0, 0),
             Create("white_knight", 1, 0),
@@ -146,7 +177,12 @@ public class Game : NetworkBehaviour
             SetPositionServerRpc(playerWhite[i].Value.GetComponent<NetworkObject>());
         }
         
-        InitializationDoneServerRpc();
+        InitializationDoneServerRpc(
+            players[0].Data["PlayerName"].Value,
+            players[0].Data["PlayerRating"].Value,
+            players[1].Data["PlayerName"].Value,
+            players[1].Data["PlayerRating"].Value
+        );
     }
 
     [ServerRpc (RequireOwnership = false)]
@@ -338,7 +374,7 @@ public class Game : NetworkBehaviour
     public void Update()
     {
         if (gameOver.Value == true && Input.GetMouseButtonDown(0)) {
-            SetGameOverServerRpc(false);
+            //SetGameOverServerRpc(false);
 
             SceneManager.LoadScene("MainMenuScene");
         }
@@ -351,17 +387,64 @@ public class Game : NetworkBehaviour
 
     [ClientRpc]
     public void WinnerClientRpc(FixedString32Bytes playerWinner) {
-        SetGameOverServerRpc(true);
+        if (gameOver.Value == false) {
+            SetGameOverServerRpc(true);
 
-        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().enabled = true;
-        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " is the winner";
+            GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().enabled = true;
+            GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " is the winner";
 
-        GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
+            GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
+
+            float f = float.Parse(playerRating1.Value.ToString());
+
+            bool isWhiteTheWinner;
+
+            if (playerWinner == "white") {
+                isWhiteTheWinner = true;
+            } else {
+                isWhiteTheWinner = false;
+            }
+
+            int[] results = this.GetComponent<EloCalculator>().EloRating(
+                playerId1.Value.ToString(),
+                playerId2.Value.ToString(),
+                playerName1.Value.ToString(),
+                playerName2.Value.ToString(),
+                float.Parse(playerRating1.Value.ToString()),
+                float.Parse(playerRating2.Value.ToString()),
+                30,
+                isWhiteTheWinner
+            );
+
+            if (IsHost) {
+                this.GetComponent<EloCalculator>().AddDocumentToCollection(
+                    PlayerPrefs.GetString("userId"),
+                    PlayerPrefs.GetString("username"),
+                    results[0]
+                );
+                PlayerPrefs.SetString("rating", results[0].ToString());
+            } else {
+                this.GetComponent<EloCalculator>().AddDocumentToCollection(
+                    PlayerPrefs.GetString("userId"),
+                    PlayerPrefs.GetString("username"),
+                    results[1]
+                );
+                PlayerPrefs.SetString("rating", results[1].ToString());
+            }
+        }
     }
 
     public void Resign() {
+
+        if (IsHost) {
+            WinnerServerRpc("black");
+        } else {
+            WinnerServerRpc("white");
+        }
+
+        
         Debug.Log("You resigned the game");
-        SceneManager.LoadScene("MainMenuScene");
+        //SceneManager.LoadScene("MainMenuScene");
     }
 
     [ServerRpc (RequireOwnership = false)]
@@ -387,14 +470,47 @@ public class Game : NetworkBehaviour
     }
 
     [ServerRpc (RequireOwnership = false)]
-    public void InitializationDoneServerRpc() {
-        InitializationDoneClientRpc();
+    public void InitializationDoneServerRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
+        InitializationDoneClientRpc(palyer1name, player1rating, player2name, player2rating);
     }
 
     [ClientRpc]
-    public void InitializationDoneClientRpc() {
-        canvasManager.GetComponent<CanvasManager>().loadingIsDone();
+    public void InitializationDoneClientRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
+        Debug.Log(palyer1name);
+        //players[0].Data["PlayerName"].Value = playerName1.Value.ToString();
+        //players[1].Data["PlayerName"].Value = playerName2.Value.ToString();
+        //players[0].Data["PlayerRating"].Value = playerRating1.Value.ToString();
+        //players[1].Data["PlayerRating"].Value = playerRating2.Value.ToString();
+
+        Debug.Log("ASTEA SUNT VALORILE DIN PLAYERS:");
+        //Debug.Log(players[0].Data["PlayerName"].Value);
+        //Debug.Log(players[0].Data["PlayerRating"].Value);
+        //Debug.Log(players[1].Data["PlayerName"].Value);
+        //Debug.Log(players[1].Data["PlayerRating"].Value);
+
+        canvasManager.GetComponent<CanvasManager>().loadingIsDone(
+            palyer1name,
+            player2name,
+            player1rating,
+            player2rating
+        );
         resignButton.onClick.AddListener(Resign);
+    }
+
+    [ServerRpc]
+    public void SetPlayersServerRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
+        Debug.Log(palyer1name);
+        playerName1.Value = palyer1name;
+        playerRating1.Value = player1rating;
+        playerName2.Value = player2name;
+        playerRating2.Value = player2rating;
+        SetPlayersClientRpc(palyer1name, player1rating, player2name, player2rating);
+    }
+
+    [ClientRpc]
+    public void SetPlayersClientRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
+        Debug.Log(palyer1name);
+        
     }
 
 }
