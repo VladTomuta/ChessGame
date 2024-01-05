@@ -8,6 +8,7 @@ using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ChessLobby : MonoBehaviour
@@ -15,7 +16,7 @@ public class ChessLobby : MonoBehaviour
     public static ChessLobby Instance { get; private set; }
     public string KEY_START_GAME { get; private set; } = "StartGameKey";
 
-    [SerializeField] GameObject canvasManager;
+    [SerializeField] private GameObject canvasManager;
 
     private Lobby joinedLobby;
     private Lobby hostLobby;
@@ -104,7 +105,7 @@ public class ChessLobby : MonoBehaviour
             Debug.Log("Joined lobby: " + joinedLobby.Id);
             GetPlayers();
             //debugText.text = "Joined lobby: " + joinedLobby.Id;
-            canvasManager.GetComponent<CanvasManager>().setText("Opponent found");
+            canvasManager.GetComponent<CanvasManager>().SetText("Opponent found");
 
             //StartGame();
         } catch (LobbyServiceException e) {
@@ -167,22 +168,14 @@ public class ChessLobby : MonoBehaviour
                 GetPlayers();
 
                 if (hostLobby != null && lobby.AvailableSlots == 0 && !gameHasStarted) {
-                    canvasManager.GetComponent<CanvasManager>().setText("Opponent found");
+                    canvasManager.GetComponent<CanvasManager>().SetText("Opponent found");
                     StartGame();
                     gameHasStarted = true;
                 }
 
                 if (joinedLobby.Data[KEY_START_GAME].Value != "0") {
                     if (hostLobby == null) {
-                        bool didItWork = await ChessRelay.Instance.StartClientWithRelay(joinedLobby.Data[KEY_START_GAME].Value);
-
-                        // if(didItWork) {
-                        //     //debugText.text = "A mers";
-                        //     canvasManager.GetComponent<CanvasManager>().setText("A mers");
-                        // } else {
-                        //     //debugText.text = "Nu a mers";
-                        //     canvasManager.GetComponent<CanvasManager>().setText("Nu a mers");
-                        // }
+                        await ChessRelay.Instance.StartClientWithRelay(joinedLobby.Data[KEY_START_GAME].Value);
 
                         StartCoroutine(WaitForConnectedStatus());
                     }
@@ -271,5 +264,13 @@ public class ChessLobby : MonoBehaviour
             Debug.Log("Player: " + player.Data["PlayerName"].Value + player.Data["PlayerRating"].Value);
         }
         return lobby.Players.ToArray();
+    }
+
+    public async void LeaveLobby() {
+        try {
+            await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
+        } catch (LobbyServiceException e) {
+            Debug.Log(e);
+        }
     }
 }

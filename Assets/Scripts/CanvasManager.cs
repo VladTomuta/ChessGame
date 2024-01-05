@@ -5,6 +5,7 @@ using Unity.Netcode;
 using Unity.Services.Lobbies.Models;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class CanvasManager : NetworkBehaviour
@@ -16,6 +17,9 @@ public class CanvasManager : NetworkBehaviour
     [SerializeField] private Image opponentImage;
     [SerializeField] private Sprite blackKing;
     [SerializeField] private TMP_Text opponentName;
+    [SerializeField] private Button cancelSearchButton;
+    [SerializeField] private TMP_Text yourTime;
+    [SerializeField] private TMP_Text opponentTime;
 
     void Awake()
     {
@@ -24,15 +28,23 @@ public class CanvasManager : NetworkBehaviour
         opponentName.gameObject.SetActive(false);
     }
 
-    public void setText(string text) {
-        loadingText.text = text;
+    void Start()
+    {
+        cancelSearchButton.onClick.AddListener(CancelSearch);
     }
 
-    public void loadingIsDone(string playerName1, string playerName2, string playerRating1, string playerRating2) {
+    public void SetText(string text) {
+        loadingText.text = text;
+        cancelSearchButton.gameObject.SetActive(false);
+    }
+
+    public void LoadingIsDone(string playerName1, string playerName2, string playerRating1, string playerRating2) {
         Debug.Log("Hei distrugem si noi ceva?");
         resignButton.gameObject.SetActive(true);
         opponentImage.gameObject.SetActive(true);
         opponentName.gameObject.SetActive(true);
+        yourTime.gameObject.SetActive(true);
+        opponentTime.gameObject.SetActive(true);
 
         loadingText.gameObject.SetActive(false);
         loadingBackground.SetActive(false);
@@ -47,6 +59,28 @@ public class CanvasManager : NetworkBehaviour
             GameObject opponentImage = GameObject.FindGameObjectWithTag("OpponentImage");
             opponentImage.GetComponent<Image>().sprite = blackKing;
             opponentName.text = playerName2 + "\n" + playerRating2;
+        }
+    }
+
+    public void CancelSearch() {
+        GameObject chessLobby = GameObject.FindGameObjectWithTag("Lobby");
+        chessLobby.GetComponent<ChessLobby>().LeaveLobby();
+        SceneManager.LoadScene("MainMenuScene");
+    }
+
+    public void SetTime(string player, string time) {
+        if (player == "black") {
+            if(IsHost) {
+                yourTime.text = time;
+            } else {
+                opponentTime.text = time;
+            }
+        } else {
+            if(IsHost) {
+                opponentTime.text = time;
+            } else {
+                yourTime.text = time;
+            }
         }
     }
 }

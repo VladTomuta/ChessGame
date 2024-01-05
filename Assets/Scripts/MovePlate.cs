@@ -34,6 +34,7 @@ public class MovePlate : MonoBehaviour
         controller = GameObject.FindGameObjectWithTag("GameController");
         Game gameScript = controller.GetComponent<Game>();
         Chessman chessmanScript = reference.GetComponent<Chessman>();
+        gameScript.SetGameHasStarted(true);
 
         chessmanScript.SpawnLastMoveServerRpc(chessmanScript.GetXBoard(), chessmanScript.GetYBoard(), matrixX, matrixY);
 

@@ -46,7 +46,7 @@ public class ChessRelay : MonoBehaviour
 
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log("Relay join code is " + joinCode);
-            canvasManager.GetComponent<CanvasManager>().setText("Creating game");
+            canvasManager.GetComponent<CanvasManager>().SetText("Creating game");
 
             return joinCode;
 
@@ -76,7 +76,7 @@ public class ChessRelay : MonoBehaviour
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "dtls"));
         var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
         Debug.Log("Relay join code is " + joinCode);
-        canvasManager.GetComponent<CanvasManager>().setText("Creating game");
+        canvasManager.GetComponent<CanvasManager>().SetText("Creating game");
         return NetworkManager.Singleton.StartHost() ? joinCode : null;
     }
 
@@ -89,7 +89,7 @@ public class ChessRelay : MonoBehaviour
         }
 
         Debug.Log("Joining relay with code: " + joinCode);
-        canvasManager.GetComponent<CanvasManager>().setText("Creating game");
+        canvasManager.GetComponent<CanvasManager>().SetText("Creating game");
         var joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode: joinCode);
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(joinAllocation, "dtls"));
         return !string.IsNullOrEmpty(joinCode) && NetworkManager.Singleton.StartClient();
@@ -98,7 +98,7 @@ public class ChessRelay : MonoBehaviour
     public async void JoinRelay(string joinCode) {
         try {
             Debug.Log("Joining relay with code: " + joinCode);
-            canvasManager.GetComponent<CanvasManager>().setText("Creating game");
+            canvasManager.GetComponent<CanvasManager>().SetText("Creating game");
 
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
 
