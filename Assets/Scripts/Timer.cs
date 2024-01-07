@@ -8,14 +8,39 @@ public class Timer : NetworkBehaviour
 {
     [SerializeField] private CanvasManager canvasManager;
     private GameObject controller;
-    private NetworkVariable<float> whiteTime = new NetworkVariable<float>(300f);
-    private NetworkVariable<float> blackTime = new NetworkVariable<float>(300f);
-    private NetworkVariable<FixedString32Bytes> newTime = new NetworkVariable<FixedString32Bytes>("05:00");
+    private NetworkVariable<float> whiteTime = new NetworkVariable<float>(600f);
+    private NetworkVariable<float> blackTime = new NetworkVariable<float>(600f);
+    private NetworkVariable<FixedString32Bytes> newTime = new NetworkVariable<FixedString32Bytes>("10:00");
     private string currentPlayer;
 
     void Start()
     {
+        Debug.Log("Am inceput :D");
         controller = GameObject.FindGameObjectWithTag("GameController");
+        // if (!IsHost) {
+        //     Debug.Log("Nu sunt Host? :(");
+        //     return;
+        // }
+            
+
+        //Debug.Log("Sunt host :D");
+        
+        string gameMode = PlayerPrefs.GetString("gameMode");
+        string[] words = gameMode.Split();
+
+        blackTime.Value = float.Parse(words[0]) * 60;
+        whiteTime.Value = float.Parse(words[0]) * 60;
+        newTime.Value = words[0] + ":00";
+
+        if (words[0].Length == 1) {
+            newTime.Value = "0" + newTime.Value;
+        }
+
+        Debug.Log(newTime.Value);
+
+        canvasManager.SetTime("white", newTime.Value.ToString());
+        canvasManager.SetTime("black", newTime.Value.ToString());
+
         //blackTime.Value = 600f;
         //whiteTime.Value = 600f;
     }

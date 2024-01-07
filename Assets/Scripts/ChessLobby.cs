@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -61,7 +62,7 @@ public class ChessLobby : MonoBehaviour
     private async void InitializaUnityAuthentication() {
         if (UnityServices.State != ServicesInitializationState.Initialized) {
             InitializationOptions initializationOptions = new InitializationOptions();
-            initializationOptions.SetProfile(Random.Range(0, 10000).ToString());
+            initializationOptions.SetProfile(UnityEngine.Random.Range(0, 10000).ToString());
 
             await UnityServices.InitializeAsync(initializationOptions);
 
@@ -79,7 +80,18 @@ public class ChessLobby : MonoBehaviour
             hostLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, 2, new CreateLobbyOptions {
                 IsPrivate = isPrivate,
                 Data = new Dictionary<string, DataObject> {
-                    { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") }
+                    { 
+                        KEY_START_GAME, 
+                        new DataObject(DataObject.VisibilityOptions.Member, "0") 
+                    },
+                    {
+                        "GameMode",
+                        new DataObject(
+                            visibility: DataObject.VisibilityOptions.Public,
+                            value: PlayerPrefs.GetString("gameMode"),
+                            index: DataObject.IndexOptions.S1
+                        )
+                    }
                 },
                 Player = GetPlayer()
             });
@@ -99,6 +111,13 @@ public class ChessLobby : MonoBehaviour
     public async void QuickJoinLobby() {
         try {
             QuickJoinLobbyOptions quickJoinLobbyOptions = new QuickJoinLobbyOptions {
+                Filter = new List<QueryFilter>() {
+                    new QueryFilter(
+                        field: QueryFilter.FieldOptions.S1,
+                        op: QueryFilter.OpOptions.EQ,
+                        value: PlayerPrefs.GetString("gameMode")
+                    )
+                },
                 Player = GetPlayer()
             };
             joinedLobby = await LobbyService.Instance.QuickJoinLobbyAsync(quickJoinLobbyOptions);

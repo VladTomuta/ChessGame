@@ -10,6 +10,7 @@ public class WelcomeScript : MonoBehaviour
     public TMP_Text ratingMessage;
     public Button playGameButton;
     public Button logoutButton;
+    public TMP_Dropdown gameMode;
     private string username;
     private string rating;
 
@@ -28,9 +29,8 @@ public class WelcomeScript : MonoBehaviour
     }
 
     private void PlayGame() {
-        //DISABLED DUE TO DEBUGGING
+        PlayerPrefs.SetString("gameMode", gameMode.options[gameMode.value].text);
         SceneManager.LoadScene("GameScene");
-        //SceneManager.LoadScene("LobbyScene");
     }
 
     private void Logout() {
