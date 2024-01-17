@@ -278,9 +278,9 @@ public class ChessLobby : MonoBehaviour
         if (lobby == null) {
             lobby = hostLobby;
         }
-        Debug.Log("Players in Lobby " + lobby.Name);
+        //Debug.Log("Players in Lobby " + lobby.Name);
         foreach (Player player in lobby.Players) {
-            Debug.Log("Player: " + player.Data["PlayerName"].Value + player.Data["PlayerRating"].Value);
+            //Debug.Log("Player: " + player.Data["PlayerName"].Value + player.Data["PlayerRating"].Value);
         }
         return lobby.Players.ToArray();
     }

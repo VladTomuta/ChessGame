@@ -141,7 +141,7 @@ public class Game : NetworkBehaviour
 
     public NetworkVariable<GameObject> Create(string name, int x, int y) {
         // Debug.Log("Creating " + name);
-        GameObject obj = Instantiate(chessPiece, new Vector3(0, 0, -1), Quaternion.identity);
+        GameObject obj = Instantiate(chessPiece, new Vector3(0, 0, 95f), Quaternion.identity);
         Chessman chessmanScript = obj.GetComponent<Chessman>();
         
         // Debug.Log(obj.GetComponent<SpriteRenderer>().sprite.name);

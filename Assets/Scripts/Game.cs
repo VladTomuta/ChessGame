@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -13,6 +14,7 @@ public class Game : NetworkBehaviour
 {
     //Positions and team for each chesspiece
     public GameObject chessPiece;
+    public GameObject card;
     public Button resignButton;
 
     [SerializeField] private GameObject canvasManager;
@@ -21,9 +23,13 @@ public class Game : NetworkBehaviour
 
     //private GameObject[,] positions = new GameObject[8, 8];
 
-    private NetworkVariable<GameObject>[] playerBlack = new NetworkVariable<GameObject>[16];
+    
     //private GameObject[] playerBlack = new GameObject[16];
-    private NetworkVariable<GameObject>[] playerWhite = new NetworkVariable<GameObject>[16];
+    private NetworkVariable<GameObject>[] playerWhitePieces = new NetworkVariable<GameObject>[16];
+    private NetworkVariable<GameObject>[] playerBlackPieces = new NetworkVariable<GameObject>[16];
+
+    [SerializeField] private GameObject playerWhiteCards;
+    [SerializeField] private GameObject playerBlackCards;
 
     //private string currentPlayer = "white";
 
@@ -46,12 +52,12 @@ public class Game : NetworkBehaviour
     private NetworkVariable<FixedString32Bytes> playerId1 = new NetworkVariable<FixedString32Bytes>("id1");
     private NetworkVariable<FixedString32Bytes> playerId2 = new NetworkVariable<FixedString32Bytes>("id2");
 
-    
-
     [ServerRpc (RequireOwnership = false)]
     public void InitializePiecesServerRpc() {
         GameObject lobbyInfo = GameObject.FindGameObjectWithTag("Lobby");
         players = lobbyInfo.GetComponent<ChessLobby>().GetPlayers();
+
+        
         
 
         Debug.Log("ASTEA SUNT VALORILE DIN PLAYERS:");
@@ -74,51 +80,51 @@ public class Game : NetworkBehaviour
         playerRating1.Value = players[0].Data["PlayerRating"].Value;
         playerRating2.Value = players[1].Data["PlayerRating"].Value;
 
-        playerWhite = new NetworkVariable<GameObject>[] {
-            Create("white_rook", 0, 0),
-            Create("white_knight", 1, 0),
-            Create("white_bishop", 2, 0),
-            Create("white_queen", 3, 0),
-            Create("white_king", 4, 0),
-            Create("white_bishop", 5, 0),
-            Create("white_knight", 6, 0),
-            Create("white_rook", 7, 0),
-            Create("white_pawn", 0, 1),
-            Create("white_pawn", 1, 1),
-            Create("white_pawn", 2, 1),
-            Create("white_pawn", 3, 1),
-            Create("white_pawn", 4, 1),
-            Create("white_pawn", 5, 1),
-            Create("white_pawn", 6, 1),
-            Create("white_pawn", 7, 1)
+        playerWhitePieces = new NetworkVariable<GameObject>[] {
+            CreatePiece("white_rook", 0, 0),
+            CreatePiece("white_knight", 1, 0),
+            CreatePiece("white_bishop", 2, 0),
+            CreatePiece("white_queen", 3, 0),
+            CreatePiece("white_king", 4, 0),
+            CreatePiece("white_bishop", 5, 0),
+            CreatePiece("white_knight", 6, 0),
+            CreatePiece("white_rook", 7, 0),
+            CreatePiece("white_pawn", 0, 1),
+            CreatePiece("white_pawn", 1, 1),
+            CreatePiece("white_pawn", 2, 1),
+            CreatePiece("white_pawn", 3, 1),
+            CreatePiece("white_pawn", 4, 1),
+            CreatePiece("white_pawn", 5, 1),
+            CreatePiece("white_pawn", 6, 1),
+            CreatePiece("white_pawn", 7, 1)
         };
 
-        playerBlack = new NetworkVariable<GameObject>[] {
-            Create("black_rook", 0, 7),
-            Create("black_knight", 1, 7),
-            Create("black_bishop", 2, 7),
-            Create("black_queen", 3, 7),
-            Create("black_king", 4, 7),
-            Create("black_bishop", 5, 7),
-            Create("black_knight", 6, 7),
-            Create("black_rook", 7, 7),
-            Create("black_pawn", 0, 6),
-            Create("black_pawn", 1, 6),
-            Create("black_pawn", 2, 6),
-            Create("black_pawn", 3, 6),
-            Create("black_pawn", 4, 6),
-            Create("black_pawn", 5, 6),
-            Create("black_pawn", 6, 6),
-            Create("black_pawn", 7, 6)
+        playerBlackPieces = new NetworkVariable<GameObject>[] {
+            CreatePiece("black_rook", 0, 7),
+            CreatePiece("black_knight", 1, 7),
+            CreatePiece("black_bishop", 2, 7),
+            CreatePiece("black_queen", 3, 7),
+            CreatePiece("black_king", 4, 7),
+            CreatePiece("black_bishop", 5, 7),
+            CreatePiece("black_knight", 6, 7),
+            CreatePiece("black_rook", 7, 7),
+            CreatePiece("black_pawn", 0, 6),
+            CreatePiece("black_pawn", 1, 6),
+            CreatePiece("black_pawn", 2, 6),
+            CreatePiece("black_pawn", 3, 6),
+            CreatePiece("black_pawn", 4, 6),
+            CreatePiece("black_pawn", 5, 6),
+            CreatePiece("black_pawn", 6, 6),
+            CreatePiece("black_pawn", 7, 6)
         };
 
         
 
         // Set all piece positions on the board
-        for (int i = 0; i < playerWhite.Length; i++){
-            Debug.Log(playerBlack[i].Value);
-            SetPositionServerRpc(playerBlack[i].Value.GetComponent<NetworkObject>());
-            SetPositionServerRpc(playerWhite[i].Value.GetComponent<NetworkObject>());
+        for (int i = 0; i < playerWhitePieces.Length; i++){
+            Debug.Log(playerBlackPieces[i].Value);
+            SetPositionServerRpc(playerBlackPieces[i].Value.GetComponent<NetworkObject>());
+            SetPositionServerRpc(playerWhitePieces[i].Value.GetComponent<NetworkObject>());
         }
         
         InitializationDoneServerRpc(
@@ -127,17 +133,42 @@ public class Game : NetworkBehaviour
             players[1].Data["PlayerName"].Value,
             players[1].Data["PlayerRating"].Value
         );
+
+        CreateCardsForPlayerClientRpc();
+    }
+
+    [ClientRpc]
+    public void CreateCardsForPlayerClientRpc() {
+        CardGenerator cardGenerator = this.GetComponent<CardGenerator>();
+
+        if (IsHost) {
+            cardGenerator.CreateCard("white_pawn", playerWhiteCards);
+            cardGenerator.CreateCard("white_pawn", playerWhiteCards);
+            cardGenerator.CreateCard("white_pawn", playerWhiteCards);
+            cardGenerator.CreateCard("white_rook", playerWhiteCards);
+            cardGenerator.CreateCard("white_knight", playerWhiteCards);
+            cardGenerator.CreateCard("white_bishop", playerWhiteCards);
+            cardGenerator.CreateCard("white_queen", playerWhiteCards);
+        } else {
+            cardGenerator.CreateCard("black_pawn", playerWhiteCards);
+            cardGenerator.CreateCard("black_pawn", playerWhiteCards);
+            cardGenerator.CreateCard("black_pawn", playerWhiteCards);
+            cardGenerator.CreateCard("black_rook", playerWhiteCards);
+            cardGenerator.CreateCard("black_knight", playerWhiteCards);
+            cardGenerator.CreateCard("black_bishop", playerWhiteCards);
+            cardGenerator.CreateCard("black_queen", playerWhiteCards);
+        }
     }
 
     [ServerRpc (RequireOwnership = false)]
-    public void CreateServerRpc(string name, int x, int y) {
-        NetworkVariable<GameObject> networkVariable = Create(name, x, y);
+    public void CreatePieceServerRpc(string name, int x, int y) {
+        NetworkVariable<GameObject> networkVariable = CreatePiece(name, x, y);
         SetPositionServerRpc(networkVariable.Value.GetComponent<NetworkObject>());
     }
 
-    public NetworkVariable<GameObject> Create(string name, int x, int y) {
+    public NetworkVariable<GameObject> CreatePiece(string name, int x, int y) {
         // Debug.Log("Creating " + name);
-        GameObject obj = Instantiate(chessPiece, new Vector3(0, 0, -1), Quaternion.identity);
+        GameObject obj = Instantiate(chessPiece, new Vector3(0, 0, 95f), Quaternion.identity);
         Chessman chessmanScript = obj.GetComponent<Chessman>();
         
         // Debug.Log(obj.GetComponent<SpriteRenderer>().sprite.name);
@@ -155,7 +186,7 @@ public class Game : NetworkBehaviour
         }
 
         Debug.Log("Intram in serverRpc");
-        CreateServerRpc(obj.GetComponent<NetworkObject>(), name, x, y);
+        CreatePieceServerRpc(obj.GetComponent<NetworkObject>(), name, x, y);
         Debug.Log("Iesim in serverRpc");
 
         // Debug.Log(obj.name);
@@ -167,13 +198,13 @@ public class Game : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void CreateServerRpc(NetworkObjectReference objRef, string name, int x, int y) {
+    public void CreatePieceServerRpc(NetworkObjectReference objRef, string name, int x, int y) {
         Debug.Log("ServerRpc");
-        CreateClientRpc(objRef, name, x, y);
+        CreatePieceClientRpc(objRef, name, x, y);
     }
 
     [ClientRpc]
-    private void CreateClientRpc(NetworkObjectReference objRef, string name, int x, int y) {
+    private void CreatePieceClientRpc(NetworkObjectReference objRef, string name, int x, int y) {
         Debug.Log("ClientRpc");
         objRef.TryGet(out NetworkObject obj);
         Chessman chessmanScript = obj.GetComponent<Chessman>();
@@ -184,6 +215,10 @@ public class Game : NetworkBehaviour
         chessmanScript.SetHasMovedServerRpc(objRef ,false);
         chessmanScript.Activate();
     }
+
+    // public GameObject CreateCard() {
+
+    // }
 
     [ServerRpc(RequireOwnership = false)]
     private void CheckIfServerIsReadyServerRpc() {
@@ -239,14 +274,14 @@ public class Game : NetworkBehaviour
     }
 
     public NetworkVariable<GameObject>[] GetPlayerWhitePieces() {
-        return playerWhite;
+        return playerWhitePieces;
     }
 
     public int GetPlayerWhitePieceByNOR(NetworkObjectReference networkObjectReference) {
-        for (int i = 0; i < playerWhite.Length; i++)
+        for (int i = 0; i < playerWhitePieces.Length; i++)
         {
             // Assuming GameObject has an appropriate equality check (e.g., comparing an ID or some property)
-            if (playerWhite[i].Equals(networkObjectReference))
+            if (playerWhitePieces[i].Equals(networkObjectReference))
             {
                 return i; // Return the position if found
             }
@@ -256,10 +291,10 @@ public class Game : NetworkBehaviour
     }
 
     public int GetPlayerBlackPieceByNOR(NetworkObjectReference networkObjectReference) {
-        for (int i = 0; i < playerBlack.Length; i++)
+        for (int i = 0; i < playerBlackPieces.Length; i++)
         {
             // Assuming GameObject has an appropriate equality check (e.g., comparing an ID or some property)
-            if (playerBlack[i].Equals(networkObjectReference))
+            if (playerBlackPieces[i].Equals(networkObjectReference))
             {
                 return i; // Return the position if found
             }
@@ -269,7 +304,7 @@ public class Game : NetworkBehaviour
     }
 
     public NetworkVariable<GameObject>[] GetPlayerBlackPieces() {
-        return playerBlack;
+        return playerBlackPieces;
     }
 
     public GameObject GetPosition(int x, int y) {

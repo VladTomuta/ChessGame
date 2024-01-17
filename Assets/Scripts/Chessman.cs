@@ -68,7 +68,7 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        UnityEngine.Vector3 targetPosition = new UnityEngine.Vector3(x, y, -1.0f);
+        UnityEngine.Vector3 targetPosition = new UnityEngine.Vector3(x, y, 95f);
         this.transform.position = targetPosition; 
 
         if(!IsHost) {
@@ -382,7 +382,7 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, -3.0f), UnityEngine.Quaternion.identity);
+        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetReference(gameObject);
@@ -399,7 +399,7 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        GameObject movePlate = Instantiate(this.movePlate, new UnityEngine.Vector3(x, y, -3.0f), UnityEngine.Quaternion.identity);
+        GameObject movePlate = Instantiate(this.movePlate, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = movePlate.GetComponent<MovePlate>();
         movePlateScript.SetAttack(true);
@@ -417,7 +417,7 @@ public class Chessman : NetworkBehaviour
         x += -2.3f;
         y += -2.3f;
 
-        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, -3.0f), UnityEngine.Quaternion.identity);
+        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetCastling(rook);
@@ -476,7 +476,7 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        GameObject MovePlate = Instantiate(lastMove, new UnityEngine.Vector3(x, y, 0.0f), UnityEngine.Quaternion.identity);
+        GameObject MovePlate = Instantiate(lastMove, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetReference(gameObject);

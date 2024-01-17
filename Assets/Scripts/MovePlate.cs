@@ -26,7 +26,7 @@ public class MovePlate : MonoBehaviour
             //Change to red
             //gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
             gameObject.GetComponent<SpriteRenderer>().sprite = attackMovePlate;
-            gameObject.GetComponent<Transform>().localScale = new Vector3(4.7f, 4.7f, -1f);
+            gameObject.GetComponent<Transform>().localScale = new Vector3(4.7f, 4.7f, gameObject.GetComponent<Transform>().localScale.z);
         }
     }
 
@@ -77,14 +77,14 @@ public class MovePlate : MonoBehaviour
             gameScript.DestroyPieceServerRpc(reference.GetComponent<NetworkObject>());
             //Destroy(reference);
             //reference = gameScript.Create("white_queen", matrixX, matrixY).Value;
-            gameScript.CreateServerRpc("white_queen", matrixX, matrixY);
+            gameScript.CreatePieceServerRpc("white_queen", matrixX, matrixY);
             //reference = networkVariable.Value;
 
         } else if (reference.name == "black_pawn" && matrixY == 0) {
             // Destroy(reference);
             // reference = gameScript.Create("black_queen", matrixX, matrixY).Value;
             gameScript.DestroyPieceServerRpc(reference.GetComponent<NetworkObject>());
-            gameScript.CreateServerRpc("black_queen", matrixX, matrixY);
+            gameScript.CreatePieceServerRpc("black_queen", matrixX, matrixY);
             //Destroy(reference);
             //reference = gameScript.Create("white_queen", matrixX, matrixY).Value;
             //gameScript.CreateServerRpc(ref reference, "black_queen", matrixX, matrixY);
