@@ -19,8 +19,7 @@ public class WelcomeScript : MonoBehaviour
     {
         username = PlayerPrefs.GetString("username");
         rating = PlayerPrefs.GetString("rating");
-        
-        Debug.Log("The user's username is: " + username);
+
         welcomeMessage.text = "Welcome\n" + username;
         ratingMessage.text = rating + " elo";
 

@@ -1,7 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using Unity.Collections;
 using Unity.Netcode;
 using Unity.Services.Lobbies.Models;
@@ -14,7 +10,6 @@ public class Game : NetworkBehaviour
 {
     //Positions and team for each chesspiece
     public GameObject chessPiece;
-    public GameObject card;
     public Button resignButton;
 
     [SerializeField] private GameObject canvasManager;
@@ -39,11 +34,8 @@ public class Game : NetworkBehaviour
 
     private NetworkVariable<bool> gameOver = new NetworkVariable<bool>(false);
     private NetworkVariable<bool> gameHasStarted = new NetworkVariable<bool>(false);
-
-    private NetworkVariable<bool> piecesHaveSpawned = new NetworkVariable<bool>(false);
     private NetworkVariable<bool> isServerReady = new NetworkVariable<bool>(false);
-
-    private  GameObject refToPossibleEnPassantPawn = null;
+    private GameObject refToPossibleEnPassantPawn = null;
     private Player[] players = new Player[2];
     private NetworkVariable<FixedString32Bytes> playerName1 = new NetworkVariable<FixedString32Bytes>("player1");
     private NetworkVariable<FixedString32Bytes> playerName2 = new NetworkVariable<FixedString32Bytes>("player2");
@@ -56,15 +48,6 @@ public class Game : NetworkBehaviour
     public void InitializePiecesServerRpc() {
         GameObject lobbyInfo = GameObject.FindGameObjectWithTag("Lobby");
         players = lobbyInfo.GetComponent<ChessLobby>().GetPlayers();
-
-        
-        
-
-        Debug.Log("ASTEA SUNT VALORILE DIN PLAYERS:");
-        Debug.Log(players[0].Data["PlayerName"].Value);
-        Debug.Log(players[0].Data["PlayerRating"].Value);
-        Debug.Log(players[1].Data["PlayerName"].Value);
-        Debug.Log(players[1].Data["PlayerRating"].Value);
 
         SetPlayersServerRpc(
             players[0].Data["PlayerName"].Value,
@@ -81,41 +64,41 @@ public class Game : NetworkBehaviour
         playerRating2.Value = players[1].Data["PlayerRating"].Value;
 
         playerWhitePieces = new NetworkVariable<GameObject>[] {
-            CreatePiece("white_rook", 0, 0),
-            CreatePiece("white_knight", 1, 0),
-            CreatePiece("white_bishop", 2, 0),
-            CreatePiece("white_queen", 3, 0),
+            // CreatePiece("white_rook", 0, 0),
+            // CreatePiece("white_knight", 1, 0),
+            // CreatePiece("white_bishop", 2, 0),
+            // CreatePiece("white_queen", 3, 0),
             CreatePiece("white_king", 4, 0),
-            CreatePiece("white_bishop", 5, 0),
-            CreatePiece("white_knight", 6, 0),
-            CreatePiece("white_rook", 7, 0),
-            CreatePiece("white_pawn", 0, 1),
-            CreatePiece("white_pawn", 1, 1),
-            CreatePiece("white_pawn", 2, 1),
+            // CreatePiece("white_bishop", 5, 0),
+            // CreatePiece("white_knight", 6, 0),
+            // CreatePiece("white_rook", 7, 0),
+            // CreatePiece("white_pawn", 0, 1),
+            // CreatePiece("white_pawn", 1, 1),
+            // CreatePiece("white_pawn", 2, 1),
             CreatePiece("white_pawn", 3, 1),
             CreatePiece("white_pawn", 4, 1),
             CreatePiece("white_pawn", 5, 1),
-            CreatePiece("white_pawn", 6, 1),
-            CreatePiece("white_pawn", 7, 1)
+            // CreatePiece("white_pawn", 6, 1),
+            // CreatePiece("white_pawn", 7, 1)
         };
 
         playerBlackPieces = new NetworkVariable<GameObject>[] {
-            CreatePiece("black_rook", 0, 7),
-            CreatePiece("black_knight", 1, 7),
-            CreatePiece("black_bishop", 2, 7),
-            CreatePiece("black_queen", 3, 7),
+            // CreatePiece("black_rook", 0, 7),
+            // CreatePiece("black_knight", 1, 7),
+            // CreatePiece("black_bishop", 2, 7),
+            // CreatePiece("black_queen", 3, 7),
             CreatePiece("black_king", 4, 7),
-            CreatePiece("black_bishop", 5, 7),
-            CreatePiece("black_knight", 6, 7),
-            CreatePiece("black_rook", 7, 7),
-            CreatePiece("black_pawn", 0, 6),
-            CreatePiece("black_pawn", 1, 6),
-            CreatePiece("black_pawn", 2, 6),
+            // CreatePiece("black_bishop", 5, 7),
+            // CreatePiece("black_knight", 6, 7),
+            // CreatePiece("black_rook", 7, 7),
+            // CreatePiece("black_pawn", 0, 6),
+            // CreatePiece("black_pawn", 1, 6),
+            // CreatePiece("black_pawn", 2, 6),
             CreatePiece("black_pawn", 3, 6),
             CreatePiece("black_pawn", 4, 6),
             CreatePiece("black_pawn", 5, 6),
-            CreatePiece("black_pawn", 6, 6),
-            CreatePiece("black_pawn", 7, 6)
+            // CreatePiece("black_pawn", 6, 6),
+            // CreatePiece("black_pawn", 7, 6)
         };
 
         
@@ -134,30 +117,27 @@ public class Game : NetworkBehaviour
             players[1].Data["PlayerRating"].Value
         );
 
-        CreateCardsForPlayerClientRpc();
+        CreateCardsForPlayerServerRpc();
     }
 
-    [ClientRpc]
-    public void CreateCardsForPlayerClientRpc() {
+    [ServerRpc]
+    public void CreateCardsForPlayerServerRpc() {
         CardGenerator cardGenerator = this.GetComponent<CardGenerator>();
 
-        if (IsHost) {
-            cardGenerator.CreateCard("white_pawn", playerWhiteCards);
-            cardGenerator.CreateCard("white_pawn", playerWhiteCards);
-            cardGenerator.CreateCard("white_pawn", playerWhiteCards);
-            cardGenerator.CreateCard("white_rook", playerWhiteCards);
-            cardGenerator.CreateCard("white_knight", playerWhiteCards);
-            cardGenerator.CreateCard("white_bishop", playerWhiteCards);
-            cardGenerator.CreateCard("white_queen", playerWhiteCards);
-        } else {
-            cardGenerator.CreateCard("black_pawn", playerWhiteCards);
-            cardGenerator.CreateCard("black_pawn", playerWhiteCards);
-            cardGenerator.CreateCard("black_pawn", playerWhiteCards);
-            cardGenerator.CreateCard("black_rook", playerWhiteCards);
-            cardGenerator.CreateCard("black_knight", playerWhiteCards);
-            cardGenerator.CreateCard("black_bishop", playerWhiteCards);
-            cardGenerator.CreateCard("black_queen", playerWhiteCards);
-        }
+        cardGenerator.CreateCard("white_pawn", playerWhiteCards, "white");
+        cardGenerator.CreateCard("white_pawn", playerWhiteCards, "white");
+        cardGenerator.CreateCard("white_pawn", playerWhiteCards, "white");
+        cardGenerator.CreateCard("white_rook", playerWhiteCards, "white");
+        cardGenerator.CreateCard("white_knight", playerWhiteCards, "white");
+        cardGenerator.CreateCard("white_bishop", playerWhiteCards, "white");
+        cardGenerator.CreateCard("white_queen", playerWhiteCards, "white");
+        cardGenerator.CreateCard("black_pawn", playerBlackCards, "black");
+        cardGenerator.CreateCard("black_pawn", playerBlackCards, "black");
+        cardGenerator.CreateCard("black_pawn", playerBlackCards, "black");
+        cardGenerator.CreateCard("black_rook", playerBlackCards, "black");
+        cardGenerator.CreateCard("black_knight", playerBlackCards, "black");
+        cardGenerator.CreateCard("black_bishop", playerBlackCards, "black");
+        cardGenerator.CreateCard("black_queen", playerBlackCards, "black");
     }
 
     [ServerRpc (RequireOwnership = false)]
@@ -174,10 +154,6 @@ public class Game : NetworkBehaviour
         // Debug.Log(obj.GetComponent<SpriteRenderer>().sprite.name);
         obj.GetComponent<NetworkObject>().Spawn(true);
 
-        Debug.Log(IsHost);
-        Debug.Log(IsClient);
-        Debug.Log(IsServer);
-
         if (IsHost) {
             do {
                 Debug.Log("Checking Server...");
@@ -185,9 +161,7 @@ public class Game : NetworkBehaviour
             } while (isServerReady.Value == false);
         }
 
-        Debug.Log("Intram in serverRpc");
         CreatePieceServerRpc(obj.GetComponent<NetworkObject>(), name, x, y);
-        Debug.Log("Iesim in serverRpc");
 
         // Debug.Log(obj.name);
         // Debug.Log(obj.GetComponent<Chessman>().GetXBoard());
@@ -199,13 +173,11 @@ public class Game : NetworkBehaviour
 
     [ServerRpc(RequireOwnership = false)]
     public void CreatePieceServerRpc(NetworkObjectReference objRef, string name, int x, int y) {
-        Debug.Log("ServerRpc");
         CreatePieceClientRpc(objRef, name, x, y);
     }
 
     [ClientRpc]
     private void CreatePieceClientRpc(NetworkObjectReference objRef, string name, int x, int y) {
-        Debug.Log("ClientRpc");
         objRef.TryGet(out NetworkObject obj);
         Chessman chessmanScript = obj.GetComponent<Chessman>();
 
@@ -222,7 +194,6 @@ public class Game : NetworkBehaviour
 
     [ServerRpc(RequireOwnership = false)]
     private void CheckIfServerIsReadyServerRpc() {
-        Debug.Log("Yes now it should be ready!");
         isServerReady.Value = true;
     }
 
@@ -240,7 +211,6 @@ public class Game : NetworkBehaviour
     [ClientRpc]
     public void SetPositionClientRpc(NetworkObjectReference objectReference) {
         objectReference.TryGet(out NetworkObject obj);
-        Debug.Log(obj);
         Chessman chessmanScript = obj.GetComponent<Chessman>();
 
         positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()] = new NetworkVariable<GameObject>(obj.GameObject());
@@ -421,26 +391,25 @@ public class Game : NetworkBehaviour
             WinnerServerRpc("white");
         }
 
-        
-        Debug.Log("You resigned the game");
         //SceneManager.LoadScene("MainMenuScene");
     }
 
     [ServerRpc (RequireOwnership = false)]
     public void DestroyPieceServerRpc(NetworkObjectReference piece) {
-        Debug.Log("I am going to destroy this on the server :D");
-        //DestroyPieceClientRpc(piece);
         piece.TryGet(out NetworkObject obj);
         obj.GetComponent<NetworkObject>().Despawn();
-        //Destroy(obj);
-        //OnNetworkDespawn();
     }
 
     [ClientRpc]
     public void DestroyPieceClientRpc(NetworkObjectReference piece) {
-        Debug.Log("I am going to destroy this on the client :D");
         piece.TryGet(out NetworkObject obj);
         Destroy(obj);
+    }
+
+    [ServerRpc (RequireOwnership = false)]
+    public void DestroyCardServerRpc(NetworkObjectReference card) {
+        card.TryGet(out NetworkObject obj);
+        obj.GetComponent<NetworkObject>().Despawn();
     }
 
     [ServerRpc (RequireOwnership = false)]
@@ -455,17 +424,10 @@ public class Game : NetworkBehaviour
 
     [ClientRpc]
     public void InitializationDoneClientRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
-        Debug.Log(palyer1name);
         //players[0].Data["PlayerName"].Value = playerName1.Value.ToString();
         //players[1].Data["PlayerName"].Value = playerName2.Value.ToString();
         //players[0].Data["PlayerRating"].Value = playerRating1.Value.ToString();
         //players[1].Data["PlayerRating"].Value = playerRating2.Value.ToString();
-
-        Debug.Log("ASTEA SUNT VALORILE DIN PLAYERS:");
-        //Debug.Log(players[0].Data["PlayerName"].Value);
-        //Debug.Log(players[0].Data["PlayerRating"].Value);
-        //Debug.Log(players[1].Data["PlayerName"].Value);
-        //Debug.Log(players[1].Data["PlayerRating"].Value);
 
         canvasManager.GetComponent<CanvasManager>().LoadingIsDone(
             palyer1name,
@@ -478,18 +440,12 @@ public class Game : NetworkBehaviour
 
     [ServerRpc]
     public void SetPlayersServerRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
-        Debug.Log(palyer1name);
         playerName1.Value = palyer1name;
         playerRating1.Value = player1rating;
         playerName2.Value = player2name;
         playerRating2.Value = player2rating;
-        SetPlayersClientRpc(palyer1name, player1rating, player2name, player2rating);
     }
 
-    [ClientRpc]
-    public void SetPlayersClientRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
-        Debug.Log(palyer1name);
-    }
 
     public void SetGameHasStarted(bool gameHasStarted) {
         this.gameHasStarted.Value = gameHasStarted;
@@ -498,5 +454,4 @@ public class Game : NetworkBehaviour
     public bool GetGameHasStarted() {
         return gameHasStarted.Value;
     }
-
 }

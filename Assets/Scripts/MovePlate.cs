@@ -2,8 +2,6 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 
-
-//ERA NewtworkBehavior DIN CEVA MOTIV
 public class MovePlate : MonoBehaviour
 {
     public GameObject controller;
@@ -36,10 +34,9 @@ public class MovePlate : MonoBehaviour
         Chessman chessmanScript = reference.GetComponent<Chessman>();
         gameScript.SetGameHasStarted(true);
 
-        chessmanScript.SpawnLastMoveServerRpc(chessmanScript.GetXBoard(), chessmanScript.GetYBoard(), matrixX, matrixY);
-
-        Debug.Log("ASTA E POZITIA DIN CARE AM PLECAT: x = " + chessmanScript.GetXBoard() + "; y = " + chessmanScript.GetYBoard());
-        Debug.Log("ASTA E POZITIA LA CARE AM AJUNS: x = " + matrixX + "; y = " + matrixY);
+        chessmanScript.DestroyAllLastMovesServerRpc("LastMove");
+        chessmanScript.SpawnLastMoveServerRpc(chessmanScript.GetXBoard(), chessmanScript.GetYBoard());
+        chessmanScript.SpawnLastMoveServerRpc(matrixX, matrixY);
 
         if(attack) {
             GameObject chessPiece;
@@ -61,10 +58,6 @@ public class MovePlate : MonoBehaviour
 
         gameScript.SetPositionEmptyServerRpc(chessmanScript.GetXBoard(),
                                              chessmanScript.GetYBoard());
-        
-        Debug.Log("After move this tile is: " + gameScript.GetPosition(chessmanScript.GetXBoard(), chessmanScript.GetYBoard()));
-
-        
 
         gameScript.SetRefToPossibleEnPassantPawnServerRpc(reference.GetComponent<NetworkObject>(), true);
 

@@ -20,6 +20,8 @@ public class CanvasManager : NetworkBehaviour
     [SerializeField] private Button cancelSearchButton;
     [SerializeField] private TMP_Text yourTime;
     [SerializeField] private TMP_Text opponentTime;
+    [SerializeField] private GameObject whiteCards;
+    [SerializeField] private GameObject blackCards;
 
     void Awake()
     {
@@ -39,7 +41,6 @@ public class CanvasManager : NetworkBehaviour
     }
 
     public void LoadingIsDone(string playerName1, string playerName2, string playerRating1, string playerRating2) {
-        Debug.Log("Hei distrugem si noi ceva?");
         resignButton.gameObject.SetActive(true);
         opponentImage.gameObject.SetActive(true);
         opponentName.gameObject.SetActive(true);
@@ -53,12 +54,14 @@ public class CanvasManager : NetworkBehaviour
         opponentName.text = "Opponent Name\n1000";
         if(!IsHost) {
             GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
-            camera.GetComponent<Transform>().rotation = new Quaternion(0,0, 180, 0);
+            camera.GetComponent<Transform>().rotation = new Quaternion(0, 0, 180, 0);
             opponentName.text = playerName1 + "\n" + playerRating1;
+            whiteCards.GetComponent<Transform>().rotation = new Quaternion(0, 0, 180, 0);
         } else {
             GameObject opponentImage = GameObject.FindGameObjectWithTag("OpponentImage");
             opponentImage.GetComponent<Image>().sprite = blackKing;
             opponentName.text = playerName2 + "\n" + playerRating2;
+            blackCards.GetComponent<Transform>().rotation = new Quaternion(0, 0, 180, 0);
         }
     }
 

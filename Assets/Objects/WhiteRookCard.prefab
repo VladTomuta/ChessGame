@@ -634,8 +634,8 @@ GameObject:
   - component: {fileID: 2831063002848586909}
   - component: {fileID: 9196812513855419468}
   - component: {fileID: 4809635882379190292}
+  - component: {fileID: -685847652694484623}
   - component: {fileID: -6665073474700140553}
-  - component: {fileID: -8424395007527442354}
   m_Layer: 5
   m_Name: WhiteRookCard
   m_TagString: Untagged
@@ -715,6 +715,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 40
   image: {fileID: 9196812513855419468}
+--- !u!114 &-685847652694484623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8319615686463075820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1537633544
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!114 &-6665073474700140553
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -727,48 +747,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a80276b83b8a2147a8c0c2425a438d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!61 &-8424395007527442354
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8319615686463075820}
-  m_Enabled: 0
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  spawnPlatePrefab: {fileID: 2614884297208751568, guid: 5e84f669998c4dd4b9d08e4a9eeafb8d, type: 3}
+  lastMove: {fileID: 690071160178940668, guid: 043544c21513f9c44809200c5f368aa7, type: 3}

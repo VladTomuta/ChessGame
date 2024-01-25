@@ -632,6 +632,7 @@ GameObject:
   - component: {fileID: 6179937101618342472}
   - component: {fileID: 1006005661451375827}
   - component: {fileID: 7331023056023569909}
+  - component: {fileID: 2065080858605839635}
   - component: {fileID: 628965362686141700}
   m_Layer: 5
   m_Name: WhiteBishopCard
@@ -712,6 +713,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 40
   image: {fileID: 1006005661451375827}
+--- !u!114 &2065080858605839635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9073276778112393660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 2718058701
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!114 &628965362686141700
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -724,3 +745,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a80276b83b8a2147a8c0c2425a438d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  spawnPlatePrefab: {fileID: 2614884297208751568, guid: 5e84f669998c4dd4b9d08e4a9eeafb8d, type: 3}
+  lastMove: {fileID: 690071160178940668, guid: 043544c21513f9c44809200c5f368aa7, type: 3}

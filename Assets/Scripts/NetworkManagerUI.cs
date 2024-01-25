@@ -41,7 +41,6 @@ public class NetworkManagerUI : MonoBehaviour
             //Debug.Log("Incepem initul");
             ChessRelay chessRelayScript = chessRelay.GetComponent<ChessRelay>();
             await chessRelayScript.StartClientWithRelay(joinCode.text);
-            Debug.Log("Uite acum initializam piesele");
             StartCoroutine(WaitForThreeSeconds());
         });
     }
@@ -70,7 +69,7 @@ public class NetworkManagerUI : MonoBehaviour
         // Code to execute after waiting for 3 seconds
         Debug.Log("Three seconds have passed!");
         //debugText.text = "Three seconds have passed!";
-        controller.GetComponent<Game>().InitializePiecesServerRpc();
+        controller.GetComponent<Game>().InitializePiecesServerRpc(); //cand e doar asta tot se poate apela de 2 ori for some reason
         GameObject.FindGameObjectWithTag("Loading").GetComponent<Text>().enabled = false;
     }
 }

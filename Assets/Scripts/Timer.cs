@@ -15,7 +15,6 @@ public class Timer : NetworkBehaviour
 
     void Start()
     {
-        Debug.Log("Am inceput :D");
         controller = GameObject.FindGameObjectWithTag("GameController");
         // if (!IsHost) {
         //     Debug.Log("Nu sunt Host? :(");
@@ -35,8 +34,6 @@ public class Timer : NetworkBehaviour
         if (words[0].Length == 1) {
             newTime.Value = "0" + newTime.Value;
         }
-
-        Debug.Log(newTime.Value);
 
         canvasManager.SetTime("white", newTime.Value.ToString());
         canvasManager.SetTime("black", newTime.Value.ToString());

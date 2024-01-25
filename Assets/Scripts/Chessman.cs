@@ -132,7 +132,6 @@ public class Chessman : NetworkBehaviour
     [ClientRpc]
     public void SetHasMovedClientRpc(NetworkObjectReference reference, bool hasMoved) {
         reference.TryGet(out NetworkObject obj);
-        Debug.Log(obj);
         Chessman chessmanScript = obj.GetComponent<Chessman>();
         chessmanScript.hasMoved = hasMoved;
     }
@@ -150,15 +149,9 @@ public class Chessman : NetworkBehaviour
             return;
         }
 
-        Debug.Log(controller.GetComponent<Game>().IsGameOver());
-        Debug.Log(controller.GetComponent<Game>().GetCurrentPlayer());
-        Debug.Log(player);
         if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().GetCurrentPlayer() == player) {
-            Debug.Log("Alo ne spawnam si noi?");
             DestroyMovePlates("MovePlate");
             InitiateMovePlates();
-        } else {
-            Debug.Log("Nu ne trezim");
         }
     }
 
@@ -170,7 +163,6 @@ public class Chessman : NetworkBehaviour
     }
 
     public void InitiateMovePlates() {
-        Debug.Log(this.name);
         switch(this.name) {
             case "black_queen":
             case "white_queen":
@@ -282,7 +274,7 @@ public class Chessman : NetworkBehaviour
         }
     }
 
-    public void PointMovePlate(int x, int y) {
+    public void PointMovePlate(int x, int y, bool canAttack = true) {
         Game gameScript = controller.GetComponent<Game>();
         // Debug.Log("Position: x: " + x + " y: " + y);
         if (gameScript.PositionOnBoard(x, y)) {
@@ -290,7 +282,7 @@ public class Chessman : NetworkBehaviour
 
             if (chessPiece == null) {
                 MovePlateSpawn(x, y);
-            } else if (chessPiece.GetComponent<Chessman>().player != player) {
+            } else if (chessPiece.GetComponent<Chessman>().player != player && canAttack) {
                 MovePlateAttackSpawn(x, y);
             }
         }
@@ -372,6 +364,20 @@ public class Chessman : NetworkBehaviour
         }
     }
 
+     public void SpawnLocationMovePlate() {
+        bool canNotAttack = false;
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 4; j++) {
+                if (IsHost) {
+                    PointMovePlate(i, j, canNotAttack);
+                } else {
+                    PointMovePlate(i, 7 - j, canNotAttack);
+                }
+            }
+        }
+     }
+
     public void MovePlateSpawn(int matrixX, int matrixY) {
         float x = matrixX;
         float y = matrixY;
@@ -382,7 +388,7 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
+        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, 97f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetReference(gameObject);
@@ -399,7 +405,7 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        GameObject movePlate = Instantiate(this.movePlate, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
+        GameObject movePlate = Instantiate(this.movePlate, new UnityEngine.Vector3(x, y, 97f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = movePlate.GetComponent<MovePlate>();
         movePlateScript.SetAttack(true);
@@ -417,7 +423,7 @@ public class Chessman : NetworkBehaviour
         x += -2.3f;
         y += -2.3f;
 
-        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
+        GameObject MovePlate = Instantiate(movePlate, new UnityEngine.Vector3(x, y, 97f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetCastling(rook);
@@ -450,15 +456,20 @@ public class Chessman : NetworkBehaviour
     }
 
     [ServerRpc (RequireOwnership = false)]
-    public void SpawnLastMoveServerRpc(int oldX, int oldY, int newX, int newY) {
-        DestroyAllLastMovesClientRpc("LastMove");
-        SpawnLastMoveClientRpc(oldX, oldY, newX, newY);
+    public void SpawnLastMoveServerRpc(int matrixX, int matrixY) {
+        //DestroyAllLastMovesClientRpc("LastMove");
+        SpawnLastMoveClientRpc(matrixX, matrixY);
     }
 
     [ClientRpc]
-    public void SpawnLastMoveClientRpc(int oldX, int oldY, int newX, int newY) {
-        LastMoveSpawn(oldX, oldY);
-        LastMoveSpawn(newX, newY);
+    public void SpawnLastMoveClientRpc(int matrixX, int matrixY) {
+        LastMoveSpawn(matrixX, matrixY);
+        //LastMoveSpawn(newX, newY);
+    }
+
+    [ServerRpc]
+    public void DestroyAllLastMovesServerRpc(string tag) {
+        DestroyAllLastMovesClientRpc(tag);
     }
 
     [ClientRpc]
@@ -476,7 +487,7 @@ public class Chessman : NetworkBehaviour
         x += -2.31f;
         y += -2.31f;
 
-        GameObject MovePlate = Instantiate(lastMove, new UnityEngine.Vector3(x, y, 95f), UnityEngine.Quaternion.identity);
+        GameObject MovePlate = Instantiate(lastMove, new UnityEngine.Vector3(x, y, 97f), UnityEngine.Quaternion.identity);
 
         MovePlate movePlateScript = MovePlate.GetComponent<MovePlate>();
         movePlateScript.SetReference(gameObject);

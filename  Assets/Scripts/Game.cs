@@ -147,10 +147,10 @@ public class Game : NetworkBehaviour
         // Debug.Log(obj.GetComponent<SpriteRenderer>().sprite.name);
         obj.GetComponent<NetworkObject>().Spawn(true);
 
-        Debug.Log(obj.name);
-        Debug.Log(obj.GetComponent<Chessman>().GetXBoard());
-        Debug.Log(obj.GetComponent<Chessman>().GetYBoard());
-        Debug.Log(obj);
+        // Debug.Log(obj.name);
+        // Debug.Log(obj.GetComponent<Chessman>().GetXBoard());
+        // Debug.Log(obj.GetComponent<Chessman>().GetYBoard());
+        // Debug.Log(obj);
 
         return new NetworkVariable<GameObject>(obj);
     }
