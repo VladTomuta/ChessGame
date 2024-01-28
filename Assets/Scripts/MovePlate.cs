@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -29,9 +30,11 @@ public class MovePlate : MonoBehaviour
     }
 
     public void OnMouseUp() {
+        Chessman chessmanScript = reference.GetComponent<Chessman>();
+        chessmanScript.DestroyMovePlates("MovePlate");
         controller = GameObject.FindGameObjectWithTag("GameController");
         Game gameScript = controller.GetComponent<Game>();
-        Chessman chessmanScript = reference.GetComponent<Chessman>();
+        
         gameScript.SetGameHasStarted(true);
 
         chessmanScript.DestroyAllLastMovesServerRpc("LastMove");
@@ -43,8 +46,15 @@ public class MovePlate : MonoBehaviour
 
             if(gameScript.GetPosition(matrixX, matrixY)) {
                 chessPiece = gameScript.GetPosition(matrixX, matrixY);
-                if (chessPiece.name == "white_king") gameScript.WinnerServerRpc("black");
-                if (chessPiece.name == "black_king") gameScript.WinnerServerRpc("white");
+                if (chessPiece.name == "white_king") 
+                    //StartCoroutine(WinnerServerRpcWithDelay("black", "capture", 0.5f));
+                    gameScript.WinnerServerRpc("black", "capture");
+                else if (chessPiece.name == "black_king")
+                    //StartCoroutine(WinnerServerRpcWithDelay("white", "capture", 0.5f));
+                    gameScript.WinnerServerRpc("white", "capture");
+                else if (CheckIfOnlyKingsAreLeft()) 
+                    //StartCoroutine(WinnerServerRpcWithDelay("tie", "onlyKingsLeft", 0.5f));
+                    gameScript.WinnerServerRpc("tie", "onlyKingsLeft");
             } else {
                 if (gameScript.GetCurrentPlayer() == "white") {
                     chessPiece = gameScript.GetPosition(matrixX, matrixY - 1);
@@ -52,6 +62,8 @@ public class MovePlate : MonoBehaviour
                     chessPiece = gameScript.GetPosition(matrixX, matrixY + 1);
                 }
             }
+
+            
 
             gameScript.DestroyPieceServerRpc(chessPiece);
         }
@@ -111,8 +123,6 @@ public class MovePlate : MonoBehaviour
         }
 
         gameScript.NextTurn();
-
-        chessmanScript.DestroyMovePlates("MovePlate");
     }
 
     public void SetCoords(int x, int y) {
@@ -138,5 +148,54 @@ public class MovePlate : MonoBehaviour
 
     public bool GetAttack() {
         return attack;
+    }
+
+    public bool CheckIfOnlyKingsAreLeft() {
+        GameObject[] chessPieces = GameObject.FindGameObjectsWithTag("ChessPiece");
+
+        if (AreThereCardsLeft())
+            return false;
+
+        Debug.Log("There are cards left");
+        Debug.Log("chessPieces.Length == " + chessPieces.Length);
+
+        if (chessPieces.Length != 3) 
+            return false;
+
+        Debug.Log("There are more then 2 pieces left");
+
+        return true;
+    }
+
+    public bool AreThereCardsLeft()
+    {
+        GameObject canvas = GameObject.Find("Canvas");
+
+        Transform whiteCards = canvas.transform.Find("WhiteCards");
+        Transform blackCards = canvas.transform.Find("BlackCards");
+
+        if (whiteCards.childCount > 0)
+        {
+            return true;
+        }
+
+        if (blackCards.childCount > 0)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    IEnumerator WinnerServerRpcWithDelay(string playerWinner, string winCondition, float delay)
+    {
+        Debug.Log("Started delay");
+        yield return new WaitForSeconds(delay);
+        Game gameScript = controller.GetComponent<Game>();
+
+        Debug.Log("End delay");
+        gameScript.WinnerServerRpc(playerWinner, winCondition);
+
+        
     }
 }

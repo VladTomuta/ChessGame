@@ -467,7 +467,7 @@ public class Chessman : NetworkBehaviour
         //LastMoveSpawn(newX, newY);
     }
 
-    [ServerRpc]
+    [ServerRpc (RequireOwnership = false)]
     public void DestroyAllLastMovesServerRpc(string tag) {
         DestroyAllLastMovesClientRpc(tag);
     }

@@ -11,6 +11,9 @@ TagManager:
   - LastMove
   - OpponentImage
   - Lobby
+  - CardBack
+  - CardFront
+  - ChessPiece
   layers:
   - Default
   - TransparentFX

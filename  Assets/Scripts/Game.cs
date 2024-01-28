@@ -233,10 +233,6 @@ public class Game : NetworkBehaviour
 
             SceneManager.LoadScene("MainMenuScene");
         }
-
-        if (Input.GetKeyDown(KeyCode.T)) {
-            InitializePieces();
-        }
     }
 
     public void Winner(string playerWinner) {

@@ -46,7 +46,7 @@ public class EloCalculator : MonoBehaviour
     // K is a constant.
     // d determines whether Player A wins or
     // Player B.
-    public int[] EloRating(string userId1, string userId2, string username1, string username2, float Ra, float Rb, int K, bool d)
+    public int[] EloRating(string userId1, string userId2, string username1, string username2, float Ra, float Rb, int K, int d)
     {
  
         // To calculate the Winning
@@ -59,16 +59,21 @@ public class EloCalculator : MonoBehaviour
  
         // Case -1 When Player A wins
         // Updating the Elo Ratings
-        if (d == true) {
+        if (d == 1) {
             Ra = Ra + K * (1 - Pa);
             Rb = Rb + K * (0 - Pb);
         }
  
         // Case -2 When Player B wins
         // Updating the Elo Ratings
-        else {
+        else if (d == 2) {
             Ra = Ra + K * (0 - Pa);
             Rb = Rb + K * (1 - Pb);
+        }
+
+        else if (d == 0) {
+            Ra = Ra + K * (0.5f - Pa);
+            Rb = Rb + K * (0.5f - Pb);
         }
  
         Debug.Log("Updated Ratings:-\n");

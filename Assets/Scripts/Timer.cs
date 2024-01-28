@@ -48,6 +48,9 @@ public class Timer : NetworkBehaviour
         if(!controller.GetComponent<Game>().GetGameHasStarted())
             return;
 
+        if(controller.GetComponent<Game>().IsGameOver())
+            return;
+
         currentPlayer = controller.GetComponent<Game>().GetCurrentPlayer();
 
         if(currentPlayer == "white") {
@@ -68,11 +71,11 @@ public class Timer : NetworkBehaviour
 
         if(whiteTime.Value < 0f) {
             calculateWhiteTimeServerRpc(true);
-            controller.GetComponent<Game>().WinnerServerRpc("black");
+            controller.GetComponent<Game>().WinnerServerRpc("black", "timeRanOut");
             enabled = false;
         } else if (blackTime.Value < 0f) {
             calculateBlackTimeServerRpc(true);
-            controller.GetComponent<Game>().WinnerServerRpc("white");
+            controller.GetComponent<Game>().WinnerServerRpc("white", "timeRanOut");
             enabled = false;
         }
     }

@@ -13,6 +13,8 @@ public class SpawnPlate : MonoBehaviour
     int matrixY;
 
     public void OnMouseUp() {
+        reference.DestroyMovePlates("MovePlate");
+
         Game gameScript = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
         gameScript.SetGameHasStarted(true);
 
@@ -20,8 +22,6 @@ public class SpawnPlate : MonoBehaviour
         reference.DestroyAllLastMovesServerRpc("LastMove");
         reference.SpawnLastMoveServerRpc(matrixX, matrixY);
         
-        reference.DestroyMovePlates("MovePlate");
-
         gameScript.DestroyCardServerRpc(reference.GetComponent<NetworkObject>());
         gameScript.NextTurn();
     }

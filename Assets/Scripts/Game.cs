@@ -11,15 +11,12 @@ public class Game : NetworkBehaviour
     //Positions and team for each chesspiece
     public GameObject chessPiece;
     public Button resignButton;
+    public Button drawButton;
 
     [SerializeField] private GameObject canvasManager;
 
     private NetworkVariable<GameObject>[,] positions = new NetworkVariable<GameObject>[8, 8];
 
-    //private GameObject[,] positions = new GameObject[8, 8];
-
-    
-    //private GameObject[] playerBlack = new GameObject[16];
     private NetworkVariable<GameObject>[] playerWhitePieces = new NetworkVariable<GameObject>[16];
     private NetworkVariable<GameObject>[] playerBlackPieces = new NetworkVariable<GameObject>[16];
 
@@ -35,6 +32,9 @@ public class Game : NetworkBehaviour
     private NetworkVariable<bool> gameOver = new NetworkVariable<bool>(false);
     private NetworkVariable<bool> gameHasStarted = new NetworkVariable<bool>(false);
     private NetworkVariable<bool> isServerReady = new NetworkVariable<bool>(false);
+    private NetworkVariable<bool> isDrawOffered = new NetworkVariable<bool>(false);
+    private NetworkVariable<bool> initializationHasStarted = new NetworkVariable<bool>(false);
+    private bool didIOfferDraw = false;
     private GameObject refToPossibleEnPassantPawn = null;
     private Player[] players = new Player[2];
     private NetworkVariable<FixedString32Bytes> playerName1 = new NetworkVariable<FixedString32Bytes>("player1");
@@ -45,7 +45,18 @@ public class Game : NetworkBehaviour
     private NetworkVariable<FixedString32Bytes> playerId2 = new NetworkVariable<FixedString32Bytes>("id2");
 
     [ServerRpc (RequireOwnership = false)]
-    public void InitializePiecesServerRpc() {
+    public void InitializePiecesServerRpc(ServerRpcParams serverRpcParams = default) {
+
+        Debug.Log("Initialize done by " + serverRpcParams.Receive.SenderClientId);
+
+        if (serverRpcParams.Receive.SenderClientId != 1) 
+            return;
+
+        if (initializationHasStarted.Value)
+            return;
+
+        initializationHasStarted.Value = true;
+
         GameObject lobbyInfo = GameObject.FindGameObjectWithTag("Lobby");
         players = lobbyInfo.GetComponent<ChessLobby>().GetPlayers();
 
@@ -308,11 +319,22 @@ public class Game : NetworkBehaviour
     }
 
     public void NextTurn() {
+
+        Debug.Log("currentPlayer.Value = " + currentPlayer.Value);
+
         ChangeCurrentPlayerServerRpc();
+
+        if(didIOfferDraw)
+            return;
+
+        SetDrawOfferTextActive(false);
+        SetDidIOfferDrawServerRpc(false);
+        SetIsDrawOfferedServerRpc(false);
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void ChangeCurrentPlayerServerRpc() {
+
         if (currentPlayer.Value == "white") {
             currentPlayer.Value = "black";
         } else {
@@ -320,38 +342,33 @@ public class Game : NetworkBehaviour
         }
     }
 
-    public void Update()
-    {
-        if (gameOver.Value == true && Input.GetMouseButtonDown(0)) {
-            //SetGameOverServerRpc(false);
-
-            SceneManager.LoadScene("MainMenuScene");
-        }
-    }
-
     [ServerRpc (RequireOwnership = false)]
-    public void WinnerServerRpc(FixedString32Bytes playerWinner) {
-        WinnerClientRpc(playerWinner);
+    public void WinnerServerRpc(FixedString32Bytes playerWinner, FixedString32Bytes winCondition) {
+        SetDrawOfferTextActive(false);
+        SetDidIOfferDrawServerRpc(false);
+        SetIsDrawOfferedServerRpc(false);
+        WinnerClientRpc(playerWinner, winCondition);
     }
 
     [ClientRpc]
-    public void WinnerClientRpc(FixedString32Bytes playerWinner) {
+    public void WinnerClientRpc(FixedString32Bytes playerWinner, FixedString32Bytes winCondition) {
         if (gameOver.Value == false) {
             SetGameOverServerRpc(true);
 
-            GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().enabled = true;
-            GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " is the winner";
-
-            GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
-
             float f = float.Parse(playerRating1.Value.ToString());
 
-            bool isWhiteTheWinner;
+            int gameResult = 0; // 0 - tie, 1 - white won, 2 - black won
 
-            if (playerWinner == "white") {
-                isWhiteTheWinner = true;
-            } else {
-                isWhiteTheWinner = false;
+            switch (playerWinner.ToString()) {
+                case "white": 
+                    gameResult = 1;
+                    break;
+                case "black": 
+                    gameResult = 2;
+                    break;
+                case "tie": 
+                    gameResult = 0;
+                    break;
             }
 
             int[] results = this.GetComponent<EloCalculator>().EloRating(
@@ -362,8 +379,18 @@ public class Game : NetworkBehaviour
                 float.Parse(playerRating1.Value.ToString()),
                 float.Parse(playerRating2.Value.ToString()),
                 30,
-                isWhiteTheWinner
+                gameResult
             );
+
+            int eloDifference;
+
+            if (IsHost) {
+                eloDifference = results[0] - int.Parse(playerRating1.Value.ToString());
+            } else {
+                eloDifference = results[1] - int.Parse(playerRating2.Value.ToString());
+            }
+
+            canvasManager.GetComponent<CanvasManager>().PopUpEndGameSummary(playerWinner.ToString(), winCondition.ToString(), eloDifference);
 
             if (IsHost) {
                 this.GetComponent<EloCalculator>().AddDocumentToCollection(
@@ -386,12 +413,52 @@ public class Game : NetworkBehaviour
     public void Resign() {
 
         if (IsHost) {
-            WinnerServerRpc("black");
+            WinnerServerRpc("black", "resignation");
         } else {
-            WinnerServerRpc("white");
+            WinnerServerRpc("white", "resignation");
         }
 
         //SceneManager.LoadScene("MainMenuScene");
+    }
+
+    public void Draw() {
+
+        if (didIOfferDraw)
+            return;
+
+        didIOfferDraw = true;
+
+        Debug.Log(isDrawOffered.Value);
+
+        if (isDrawOffered.Value) {
+            WinnerServerRpc("tie", "drawAccepted");
+        } else {
+            SetIsDrawOfferedServerRpc(true);
+            SetDrawOfferTextActive(true);
+        }
+    }
+
+    public void SetDrawOfferTextActive(bool value) {
+        canvasManager.GetComponent<CanvasManager>().SetDrawOfferTextActiveServerRpc(value);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetIsDrawOfferedServerRpc(bool isDrawOffered) {
+        this.isDrawOffered.Value = isDrawOffered;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetDidIOfferDrawServerRpc(bool didIOfferDraw) {
+        SetDidIOfferDrawClientRpc(didIOfferDraw);
+    }
+
+    [ClientRpc]
+    public void SetDidIOfferDrawClientRpc(bool didIOfferDraw) {
+        this.didIOfferDraw = didIOfferDraw;
+    }
+
+    public bool GetDidIOfferDraw() {
+        return didIOfferDraw;
     }
 
     [ServerRpc (RequireOwnership = false)]
@@ -436,6 +503,7 @@ public class Game : NetworkBehaviour
             player2rating
         );
         resignButton.onClick.AddListener(Resign);
+        drawButton.onClick.AddListener(Draw);
     }
 
     [ServerRpc]

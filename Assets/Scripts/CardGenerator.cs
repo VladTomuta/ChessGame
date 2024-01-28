@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CardGenerator : NetworkBehaviour
@@ -82,5 +83,14 @@ public class CardGenerator : NetworkBehaviour
         card.transform.localScale = Vector3.one;
         card.name = card.name.Replace("(Clone)", "");
         card.GetComponent<CardHandler>().SetPlayer(player);
+
+        Transform cardTransform = card.transform;
+        Transform cardFrontTransform = cardTransform.Find("CardFront");
+        Transform cardBackTransform = cardTransform.Find("CardBack");
+
+        if((IsHost && player == "black") || (!IsHost && player == "white")) {
+            cardFrontTransform.gameObject.SetActive(false);
+            cardBackTransform.gameObject.SetActive(true);
+        }
     }
 }
