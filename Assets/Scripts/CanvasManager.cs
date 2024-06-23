@@ -8,6 +8,7 @@ public class CanvasManager : NetworkBehaviour
 {
     [SerializeField] private Button resignButton;
     [SerializeField] private Button drawButton;
+    [SerializeField] private Button homeButton;
     [SerializeField] private TMP_Text drawOfferText;
     [SerializeField] private TMP_Text loadingText;
     [SerializeField] private GameObject loadingBackground;
@@ -26,6 +27,7 @@ public class CanvasManager : NetworkBehaviour
     {
         resignButton.gameObject.SetActive(false);
         drawButton.gameObject.SetActive(false);
+        homeButton.gameObject.SetActive(false);
         opponentImage.gameObject.SetActive(false);
         opponentName.gameObject.SetActive(false);
         drawOfferText.gameObject.SetActive(false);
@@ -95,6 +97,7 @@ public class CanvasManager : NetworkBehaviour
         SetTextsInEndGameSummary(playerWinner, winCondition, eloDifference);
 
         ActivateEndGameSummaryButtons();
+        ActivateHomeButton();
     }
 
     public void ActivateEndGameSummaryButtons() {
@@ -232,5 +235,14 @@ public class CanvasManager : NetworkBehaviour
             drawButton.GetComponentInChildren<TMP_Text>().text = "Offer Draw";
         }
         
+    }
+
+    public void ActivateHomeButton() {
+        resignButton.gameObject.SetActive(false);
+        drawButton.gameObject.SetActive(false);
+        homeButton.gameObject.SetActive(true);
+        
+
+        homeButton.onClick.AddListener(ReturnToMainMenu);
     }
 }

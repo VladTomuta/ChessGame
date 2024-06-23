@@ -3,12 +3,10 @@ using Unity.Netcode;
 using Unity.Services.Lobbies.Models;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Game : NetworkBehaviour
 {
-    //Positions and team for each chesspiece
     public GameObject chessPiece;
     public Button resignButton;
     public Button drawButton;
@@ -22,8 +20,6 @@ public class Game : NetworkBehaviour
 
     [SerializeField] private GameObject playerWhiteCards;
     [SerializeField] private GameObject playerBlackCards;
-
-    //private string currentPlayer = "white";
 
     //true  - white's turn
     //false - black's turn
@@ -75,46 +71,19 @@ public class Game : NetworkBehaviour
         playerRating2.Value = players[1].Data["PlayerRating"].Value;
 
         playerWhitePieces = new NetworkVariable<GameObject>[] {
-            // CreatePiece("white_rook", 0, 0),
-            // CreatePiece("white_knight", 1, 0),
-            // CreatePiece("white_bishop", 2, 0),
-            // CreatePiece("white_queen", 3, 0),
             CreatePiece("white_king", 4, 0),
-            // CreatePiece("white_bishop", 5, 0),
-            // CreatePiece("white_knight", 6, 0),
-            // CreatePiece("white_rook", 7, 0),
-            // CreatePiece("white_pawn", 0, 1),
-            // CreatePiece("white_pawn", 1, 1),
-            // CreatePiece("white_pawn", 2, 1),
             CreatePiece("white_pawn", 3, 1),
             CreatePiece("white_pawn", 4, 1),
-            CreatePiece("white_pawn", 5, 1),
-            // CreatePiece("white_pawn", 6, 1),
-            // CreatePiece("white_pawn", 7, 1)
+            CreatePiece("white_pawn", 5, 1)
         };
 
         playerBlackPieces = new NetworkVariable<GameObject>[] {
-            // CreatePiece("black_rook", 0, 7),
-            // CreatePiece("black_knight", 1, 7),
-            // CreatePiece("black_bishop", 2, 7),
-            // CreatePiece("black_queen", 3, 7),
             CreatePiece("black_king", 4, 7),
-            // CreatePiece("black_bishop", 5, 7),
-            // CreatePiece("black_knight", 6, 7),
-            // CreatePiece("black_rook", 7, 7),
-            // CreatePiece("black_pawn", 0, 6),
-            // CreatePiece("black_pawn", 1, 6),
-            // CreatePiece("black_pawn", 2, 6),
             CreatePiece("black_pawn", 3, 6),
             CreatePiece("black_pawn", 4, 6),
-            CreatePiece("black_pawn", 5, 6),
-            // CreatePiece("black_pawn", 6, 6),
-            // CreatePiece("black_pawn", 7, 6)
+            CreatePiece("black_pawn", 5, 6)
         };
 
-        
-
-        // Set all piece positions on the board
         for (int i = 0; i < playerWhitePieces.Length; i++){
             Debug.Log(playerBlackPieces[i].Value);
             SetPositionServerRpc(playerBlackPieces[i].Value.GetComponent<NetworkObject>());
@@ -158,11 +127,9 @@ public class Game : NetworkBehaviour
     }
 
     public NetworkVariable<GameObject> CreatePiece(string name, int x, int y) {
-        // Debug.Log("Creating " + name);
         GameObject obj = Instantiate(chessPiece, new Vector3(0, 0, 95f), Quaternion.identity);
         Chessman chessmanScript = obj.GetComponent<Chessman>();
-        
-        // Debug.Log(obj.GetComponent<SpriteRenderer>().sprite.name);
+    
         obj.GetComponent<NetworkObject>().Spawn(true);
 
         if (IsHost) {
@@ -173,11 +140,6 @@ public class Game : NetworkBehaviour
         }
 
         CreatePieceServerRpc(obj.GetComponent<NetworkObject>(), name, x, y);
-
-        // Debug.Log(obj.name);
-        // Debug.Log(obj.GetComponent<Chessman>().GetXBoard());
-        // Debug.Log(obj.GetComponent<Chessman>().GetYBoard());
-        // Debug.Log(obj);
 
         return new NetworkVariable<GameObject>(obj);
     }
@@ -199,10 +161,6 @@ public class Game : NetworkBehaviour
         chessmanScript.Activate();
     }
 
-    // public GameObject CreateCard() {
-
-    // }
-
     [ServerRpc(RequireOwnership = false)]
     private void CheckIfServerIsReadyServerRpc() {
         isServerReady.Value = true;
@@ -211,12 +169,6 @@ public class Game : NetworkBehaviour
     [ServerRpc (RequireOwnership = false)]
     public void SetPositionServerRpc(NetworkObjectReference obj) {
         SetPositionClientRpc(obj);
-        // Chessman chessmanScript = obj.GetComponent<Chessman>();
-
-        // positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()] = new NetworkVariable<GameObject>(obj);
-        // Debug.Log(chessmanScript.GetXBoard());
-        // Debug.Log(chessmanScript.GetYBoard());
-        // Debug.Log("Object added in positions: " + positions[chessmanScript.GetXBoard(), chessmanScript.GetYBoard()]);
     }
 
     [ClientRpc]
@@ -261,10 +213,9 @@ public class Game : NetworkBehaviour
     public int GetPlayerWhitePieceByNOR(NetworkObjectReference networkObjectReference) {
         for (int i = 0; i < playerWhitePieces.Length; i++)
         {
-            // Assuming GameObject has an appropriate equality check (e.g., comparing an ID or some property)
             if (playerWhitePieces[i].Equals(networkObjectReference))
             {
-                return i; // Return the position if found
+                return i;
             }
         }
 
@@ -274,10 +225,9 @@ public class Game : NetworkBehaviour
     public int GetPlayerBlackPieceByNOR(NetworkObjectReference networkObjectReference) {
         for (int i = 0; i < playerBlackPieces.Length; i++)
         {
-            // Assuming GameObject has an appropriate equality check (e.g., comparing an ID or some property)
             if (playerBlackPieces[i].Equals(networkObjectReference))
             {
-                return i; // Return the position if found
+                return i;
             }
         }
 
@@ -289,12 +239,6 @@ public class Game : NetworkBehaviour
     }
 
     public GameObject GetPosition(int x, int y) {
-        // for (int i = 0; i < 8; i++) {
-        //     for (int j = 0; j < 8; j++) {
-        //         Debug.Log("i = " + i + "\nj = " + j + "\nValue: " + positions[i, j].Value);
-        //     }
-        // }
-
         if(positions[x, y] == null) {
             return null;
         }
@@ -417,8 +361,6 @@ public class Game : NetworkBehaviour
         } else {
             WinnerServerRpc("white", "resignation");
         }
-
-        //SceneManager.LoadScene("MainMenuScene");
     }
 
     public void Draw() {
@@ -491,11 +433,6 @@ public class Game : NetworkBehaviour
 
     [ClientRpc]
     public void InitializationDoneClientRpc(string palyer1name, string player1rating, string player2name, string player2rating) {
-        //players[0].Data["PlayerName"].Value = playerName1.Value.ToString();
-        //players[1].Data["PlayerName"].Value = playerName2.Value.ToString();
-        //players[0].Data["PlayerRating"].Value = playerRating1.Value.ToString();
-        //players[1].Data["PlayerRating"].Value = playerRating2.Value.ToString();
-
         canvasManager.GetComponent<CanvasManager>().LoadingIsDone(
             palyer1name,
             player2name,

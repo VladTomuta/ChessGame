@@ -1,27 +1,20 @@
-using System.Collections;
-using System.Numerics;
 using Unity.Netcode;
 using UnityEngine;
 
 public class Chessman : NetworkBehaviour
 {
-    // References
     private GameObject controller;
     public GameObject movePlate;
     public GameObject lastMove;
 
-    // Positions
     private int xBoard = -1;
     private int yBoard = -1;
 
-    // Variable ot keep track of "black" player or "white" player
     private string player;
 
-    // Variable to keep track if the piece has moved or not this game
     private bool hasMoved;
     private bool canBeCapturedEnPassant;
 
-    // References for all the sprites that the chesspiece can be
     public Sprite black_king, black_queen, black_knight, black_bishop, black_rook, black_pawn;
     public Sprite white_king, white_queen, white_knight, white_bishop, white_rook, white_pawn;
 
@@ -32,7 +25,6 @@ public class Chessman : NetworkBehaviour
     public void Activate() {
         controller = GameObject.FindGameObjectWithTag("GameController");
 
-        //take the instantiated location and adjust the transform
         SetCoordsServerRpc();
 
         switch (this.name) {
@@ -75,16 +67,6 @@ public class Chessman : NetworkBehaviour
             this.transform.rotation = new UnityEngine.Quaternion(0, 0, 180, 0);
         }
     }
-
-    // IEnumerator AllowSmoothMove(string lobbyId, float waitTimeSeconds)
-    // {
-    //     var delay = new WaitForSecondsRealtime(waitTimeSeconds);
-
-    //     Debug.Log("heartbeat sent from coroutine");
-    //     LobbyService.Instance.SendHeartbeatPingAsync(lobbyId);
-    //     yield return delay;
-
-    // }
 
     public int GetXBoard() {
         return xBoard;
@@ -276,7 +258,6 @@ public class Chessman : NetworkBehaviour
 
     public void PointMovePlate(int x, int y, bool canAttack = true) {
         Game gameScript = controller.GetComponent<Game>();
-        // Debug.Log("Position: x: " + x + " y: " + y);
         if (gameScript.PositionOnBoard(x, y)) {
             GameObject chessPiece = gameScript.GetPosition(x, y);
 
